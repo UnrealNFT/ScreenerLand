@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+backend/.env.local
+
+# Private keys & secrets
+*.pem
+*.key
+*.p12
+*.pfx
+Account*.pem
+*secret_key*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+server.log
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Uploads & user data
+backend/uploads/*
+!backend/uploads/.gitkeep
+uploads/*
+
+# Database
+*.sql.backup
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
