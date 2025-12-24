@@ -66,14 +66,26 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Load user profile from localStorage
+  // Load user profile from localStorage (specific to connected wallet)
   useEffect(() => {
     const loadProfile = () => {
-      const savedProfile = localStorage.getItem('userProfile')
+      if (!walletAddress) {
+        // No wallet connected - clear profile
+        setUserProfile({ name: '', avatar: '', bio: '' })
+        return
+      }
+      
+      // Use wallet-specific key to avoid showing wrong profile
+      const profileKey = `userProfile_${walletAddress}`
+      const savedProfile = localStorage.getItem(profileKey)
+      
       if (savedProfile) {
         const parsed = JSON.parse(savedProfile)
-        console.log('📱 Navbar loaded profile:', parsed)
+        console.log('📱 Navbar loaded profile for', walletAddress.substring(0, 10) + '...:', parsed)
         setUserProfile(parsed)
+      } else {
+        // No profile for this wallet - clear it
+        setUserProfile({ name: '', avatar: '', bio: '' })
       }
     }
     
@@ -91,7 +103,7 @@ export default function Navbar() {
       window.removeEventListener('profileUpdated', handleProfileUpdate)
       window.removeEventListener('storage', loadProfile)
     }
-  }, [])
+  }, [walletAddress])
 
   // Balance is now handled by WalletContext, no need to fetch here
   

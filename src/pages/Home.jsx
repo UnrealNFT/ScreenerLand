@@ -603,7 +603,7 @@ export default function Home() {
             transition={{ delay: 0.4 }}
             className="text-white/70 text-xl mb-12 font-light"
           >
-            Where crypto meets content. Create, engage, earn.
+            Share updates, build hype, grow your community.
           </motion.p>
           
           {/* Features Grid */}
@@ -614,24 +614,24 @@ export default function Home() {
             className="grid grid-cols-2 gap-4 mb-12 max-w-xl mx-auto"
           >
             <div className="glass-inner rounded-2xl p-5 text-left hover:scale-105 transition-transform">
-              <div className="text-3xl mb-2">👑</div>
-              <p className="text-white font-bold text-sm">Free for Owners</p>
-              <p className="text-white/50 text-xs">Unlimited uploads</p>
+              <div className="text-3xl mb-2">📱</div>
+              <p className="text-white font-bold text-sm">Vertical Stories</p>
+              <p className="text-white/50 text-xs">Full screen</p>
             </div>
             <div className="glass-inner rounded-2xl p-5 text-left hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">🔥</div>
               <p className="text-white font-bold text-sm">CTO Access</p>
-              <p className="text-white/50 text-xs">1,000 CSPR</p>
+              <p className="text-white/50 text-xs">90 days posting</p>
             </div>
             <div className="glass-inner rounded-2xl p-5 text-left hover:scale-105 transition-transform">
-              <div className="text-3xl mb-2">💰</div>
-              <p className="text-white font-bold text-sm">Earn Rewards</p>
-              <p className="text-white/50 text-xs">Top 10% daily</p>
+              <div className="text-3xl mb-2">💬</div>
+              <p className="text-white font-bold text-sm">Engage</p>
+              <p className="text-white/50 text-xs">Comments & likes</p>
             </div>
             <div className="glass-inner rounded-2xl p-5 text-left hover:scale-105 transition-transform">
               <div className="text-3xl mb-2">📈</div>
               <p className="text-white font-bold text-sm">Go Viral</p>
-              <p className="text-white/50 text-xs">Score × rewards</p>
+              <p className="text-white/50 text-xs">Top feed ranking</p>
             </div>
           </motion.div>
           
@@ -659,7 +659,7 @@ export default function Home() {
             transition={{ delay: 0.7 }}
             className="text-white/30 text-sm mt-8"
           >
-            Be the first creator and earn rewards
+            Own the narrative for your token
           </motion.p>
         </motion.div>
       </div>
@@ -696,21 +696,21 @@ export default function Home() {
             className="mb-8 text-center"
           >
             <h1 className="text-4xl font-black text-white mb-2">📹 Stories</h1>
-            <p className="text-white/60 text-lg mb-6">Where crypto meets content. Create, engage, earn.</p>
+            <p className="text-white/60 text-lg mb-6">Share updates, build hype, grow your community.</p>
             
             {/* Features Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <div className="glass-panel p-3 rounded-xl">
-                <div className="text-2xl mb-1">👑</div>
-                <p className="text-white font-bold text-xs">Free for Owners</p>
+                <div className="text-2xl mb-1">📱</div>
+                <p className="text-white font-bold text-xs">Vertical Stories</p>
               </div>
               <div className="glass-panel p-3 rounded-xl">
                 <div className="text-2xl mb-1">🔥</div>
                 <p className="text-white font-bold text-xs">CTO Access</p>
               </div>
               <div className="glass-panel p-3 rounded-xl">
-                <div className="text-2xl mb-1">💰</div>
-                <p className="text-white font-bold text-xs">Earn Rewards</p>
+                <div className="text-2xl mb-1">💬</div>
+                <p className="text-white font-bold text-xs">Engage</p>
               </div>
               <div className="glass-panel p-3 rounded-xl">
                 <div className="text-2xl mb-1">📈</div>
@@ -1419,7 +1419,9 @@ export default function Home() {
                     // Get user profile - current user from localStorage, others from state
                     let profile = null
                     if (comment.userWallet === walletAddress) {
-                      const currentUserProfile = localStorage.getItem('userProfile')
+                      // Use wallet-specific key for current user
+                      const profileKey = `userProfile_${walletAddress}`
+                      const currentUserProfile = localStorage.getItem(profileKey)
                       profile = currentUserProfile ? JSON.parse(currentUserProfile) : null
                     } else {
                       // Get from backend-loaded profiles (always fresh)

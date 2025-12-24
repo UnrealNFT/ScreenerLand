@@ -238,8 +238,8 @@ app.get('/api/cto/config', (req, res) => {
     const ctoConfig = {
       receiverWallet: process.env.CTO_RECEIVER_WALLET,
       receiverAccountHash: process.env.CTO_RECEIVER_ACCOUNT_HASH,
-      price: 10,
-      priceMotes: '10000000000'
+      price: 1000,
+      priceMotes: '1000000000000'
     }
     
     // Validate that values are set
@@ -2311,7 +2311,7 @@ app.post('/api/stories/claim-cto', async (req, res) => {
       return res.status(400).json({ error: 'Transaction hash required for payment verification' })
     }
     
-    const CTO_PRICE = 10 // 10 CSPR
+    const CTO_PRICE = 1000 // 1000 CSPR for CTO access
     
     if (amount !== CTO_PRICE) {
       return res.status(400).json({ error: `CTO access costs ${CTO_PRICE} CSPR` })

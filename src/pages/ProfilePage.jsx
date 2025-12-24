@@ -51,11 +51,18 @@ export default function ProfilePage() {
     }
   }
 
-  // Load profile from localStorage
+  // Load profile from localStorage (wallet-specific)
   useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile')
+    if (!walletAddress) return
+    
+    const profileKey = `userProfile_${walletAddress}`
+    const savedProfile = localStorage.getItem(profileKey)
+    
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile))
+    } else {
+      // Clear profile if no data for this wallet
+      setProfile({ name: '', avatar: '', bio: '' })
     }
 
     // Load joined communities and fix their names
@@ -445,7 +452,7 @@ export default function ProfilePage() {
                               </p>
                               {payment.transaction_hash && (
                                 <a
-                                  href={`https://testnet.cspr.live/deploy/${payment.transaction_hash}`}
+                                  href={`https://cspr.live/deploy/${payment.transaction_hash}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs mt-1 transition-colors"
@@ -983,10 +990,11 @@ export default function ProfilePage() {
                               bio: profile.bio
                             }
                             
-                            localStorage.setItem('userProfile', JSON.stringify(profileToSave))
-                            localStorage.setItem(`profile_${walletAddress}`, JSON.stringify(profileToSave))
+                            // Use wallet-specific key
+                            const profileKey = `userProfile_${walletAddress}`
+                            localStorage.setItem(profileKey, JSON.stringify(profileToSave))
                             
-                            console.log('✅ Profile saved:', profileToSave)
+                            console.log('✅ Profile saved for', walletAddress.substring(0, 10) + '...:', profileToSave)
                             
                             // Dispatch custom event to update navbar immediately
                             window.dispatchEvent(new Event('profileUpdated'))

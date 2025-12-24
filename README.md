@@ -14,7 +14,7 @@ ScreenerLand combines the best features of DexScreener, Pump.fun, and social med
 - 🎬 **Social Stories** - 120-second videos by token holders  
 - 💬 **Community Chat** - Real-time chat per token
 - 👤 **User Profiles** - Track your portfolio & activity
-- 🏆 **CTO System** - Unique "Chief Token Officer" access model
+- 🏆 **CTO System** - Unique "Community Take Over" access model
 
 ## ✨ Key Features
 
@@ -25,7 +25,7 @@ ScreenerLand combines the best features of DexScreener, Pump.fun, and social med
 - Search across all tokens
 
 ### Social Stories (Unique!)
-- **CTO Access**: Pay 10 CSPR for 90-day upload rights
+- **CTO Access**: Pay 1000 CSPR for 90-day upload rights
 - 120-second video stories per token
 - TikTok/Instagram-style feed
 - Engagement metrics (views, likes)
@@ -162,7 +162,7 @@ VITE_NETWORK_NAME=casper
 5. Join token communities
 
 ### For Token Holders
-1. Pay 10 CSPR to become CTO (Chief Token Officer)
+1. Pay 1000 CSPR to become CTO (Community Take Over)
 2. Upload 120s videos to promote your token
 3. Engage with your community
 4. Stay active to keep CTO status (90 days)
@@ -201,8 +201,8 @@ MIT License - see [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- Twitter: [@screenerfun](https://twitter.com/screenerfun)
-- Telegram: [t.me/screenerfun](https://t.me/screenerfun)
+- Twitter: [@Screenerland](https://twitter.com/Screenerland)
+- Telegram: [t.me/Screenerland](https://t.me/Screenerland)
 
 ---
 
