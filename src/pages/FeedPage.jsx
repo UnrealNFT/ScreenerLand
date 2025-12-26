@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { getTokenColor } from '../utils/tokenColors'
 import TokenAvatar from '../components/Token/TokenAvatar'
 import UserAvatar from '../components/User/UserAvatar'
+import { API_URL } from '../config'
 
 export default function FeedPage() {
   const [activeTab, setActiveTab] = useState('communities') // 'communities' or 'stories'
@@ -19,7 +20,7 @@ export default function FeedPage() {
 
   const loadCommunityFeed = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/communities/latest-messages')
+      const response = await fetch('${API_URL}/api/communities/latest-messages')
       const data = await response.json()
       
       if (data.success) {
@@ -34,7 +35,7 @@ export default function FeedPage() {
 
   const loadStoryRanking = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/stories/ranking/24h')
+      const response = await fetch('${API_URL}/api/stories/ranking/24h')
       const data = await response.json()
       
       if (data.success) {
@@ -257,13 +258,13 @@ export default function FeedPage() {
                         <Link to={`/`} className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 group">
                           {story.mediaType === 'video' ? (
                             <video
-                              src={`http://localhost:3001${story.videoUrl}`}
+                              src={`${API_URL}${story.videoUrl}`}
                               className="w-full h-full object-cover"
                               muted
                             />
                           ) : (
                             <img
-                              src={`http://localhost:3001${story.videoUrl}`}
+                              src={`${API_URL}${story.videoUrl}`}
                               alt="Story"
                               className="w-full h-full object-cover"
                             />

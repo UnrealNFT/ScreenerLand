@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { API_URL } from '../config'
 
 export default function AdminCleanup() {
   const [activeTab, setActiveTab] = useState('cto') // 'cto' | 'stories' | 'reports' | 'chat' | 'community'
@@ -71,7 +72,7 @@ export default function AdminCleanup() {
       const cleanHash = hash.replace(/^hash-/, '')
       
       // Try cspr.cloud contract-packages endpoint
-      const response = await fetch(`http://localhost:3001/api/cspr-cloud/contract-packages/${cleanHash}`)
+      const response = await fetch(`${API_URL}/api/cspr-cloud/contract-packages/${cleanHash}`)
       const data = await response.json()
       
       if (data?.data) {
@@ -93,7 +94,7 @@ export default function AdminCleanup() {
   const checkAllCTO = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/admin/all-cto')
+      const response = await fetch('${API_URL}/api/admin/all-cto')
       const data = await response.json()
       
       if (data.success) {
@@ -115,7 +116,7 @@ export default function AdminCleanup() {
     setLoading(true)
     setSelectedToken(hash)
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/token/${hash}?limit=100`)
+      const response = await fetch(`${API_URL}/api/stories/token/${hash}?limit=100`)
       const data = await response.json()
       
       if (data.success) {
@@ -131,7 +132,7 @@ export default function AdminCleanup() {
   const loadAllStories = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/stories?limit=100')
+      const response = await fetch('${API_URL}/api/stories?limit=100')
       const data = await response.json()
       
       if (data.success) {
@@ -154,8 +155,8 @@ export default function AdminCleanup() {
     setLoading(true)
     try {
       const url = status && status !== 'all' 
-        ? `http://localhost:3001/api/admin/reports?status=${status}`
-        : 'http://localhost:3001/api/admin/reports'
+        ? `${API_URL}/api/admin/reports?status=${status}`
+        : '${API_URL}/api/admin/reports'
       
       const response = await fetch(url)
       const data = await response.json()
@@ -179,7 +180,7 @@ export default function AdminCleanup() {
   const resolveReport = async (reportId, action) => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/admin/reports/${reportId}/resolve`, {
+      const response = await fetch(`${API_URL}/api/admin/reports/${reportId}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resolvedBy: adminName, action })
@@ -209,7 +210,7 @@ export default function AdminCleanup() {
         return
       }
 
-      const response = await fetch('http://localhost:3001/api/admin/profiles?limit=100', {
+      const response = await fetch('${API_URL}/api/admin/profiles?limit=100', {
         headers: {
           'X-Admin-Password': adminPassword
         }
@@ -238,7 +239,7 @@ export default function AdminCleanup() {
   const loadCommunityMessages = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/community/messages?limit=100')
+      const response = await fetch('${API_URL}/api/community/messages?limit=100')
       const data = await response.json()
       
       if (data.success) {
@@ -262,7 +263,7 @@ export default function AdminCleanup() {
     
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/community/messages/${messageId}`, {
+      const response = await fetch(`${API_URL}/api/community/messages/${messageId}`, {
         method: 'DELETE'
       })
       
@@ -291,7 +292,7 @@ export default function AdminCleanup() {
     setLoading(true)
     try {
       const promises = Array. from(selectedMessages).map(id =>
-        fetch(`http://localhost:3001/api/community/messages/${id}`, { method: 'DELETE' })
+        fetch(`${API_URL}/api/community/messages/${id}`, { method: 'DELETE' })
       )
       
       await Promise.all(promises)
@@ -330,7 +331,7 @@ export default function AdminCleanup() {
 
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminOverride: true })
@@ -354,7 +355,7 @@ export default function AdminCleanup() {
   const checkHolders = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/cto-holders/${tokenHash}`)
+      const response = await fetch(`${API_URL}/api/stories/cto-holders/${tokenHash}`)
       const data = await response.json()
       
       if (data.success) {
@@ -374,7 +375,7 @@ export default function AdminCleanup() {
 
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/cto-access/${tokenHashToRevoke}/${walletToRevoke}`, {
+      const response = await fetch(`${API_URL}/api/stories/cto-access/${tokenHashToRevoke}/${walletToRevoke}`, {
         method: 'DELETE'
       })
       
@@ -403,7 +404,7 @@ export default function AdminCleanup() {
 
     setLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/admin/clean-cto-duplicates', {
+      const response = await fetch('${API_URL}/api/admin/clean-cto-duplicates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenHash, ownerWallet })
@@ -696,13 +697,13 @@ export default function AdminCleanup() {
                           <div key={story.id} className="bg-black/40 rounded-lg border border-white/10 overflow-hidden">
                             {story.mediaType === 'video' ? (
                               <video
-                                src={`http://localhost:3001${story.videoUrl}`}
+                                src={`${API_URL}${story.videoUrl}`}
                                 className="w-full aspect-video object-cover"
                                 muted
                               />
                             ) : (
                               <img
-                                src={`http://localhost:3001${story.videoUrl}`}
+                                src={`${API_URL}${story.videoUrl}`}
                                 alt="Story"
                                 className="w-full aspect-video object-cover"
                               />
@@ -804,13 +805,13 @@ export default function AdminCleanup() {
                               <div className="flex-shrink-0 w-32">
                                 {report.media_type === 'video' ? (
                                   <video
-                                    src={`http://localhost:3001${report.video_url}`}
+                                    src={`${API_URL}${report.video_url}`}
                                     className="w-full aspect-video object-cover rounded"
                                     muted
                                   />
                                 ) : (
                                   <img
-                                    src={`http://localhost:3001${report.video_url}`}
+                                    src={`${API_URL}${report.video_url}`}
                                     alt="Report"
                                     className="w-full aspect-video object-cover rounded"
                                   />
@@ -1177,7 +1178,7 @@ export default function AdminCleanup() {
                                       return
                                     }
 
-                                    const response = await fetch('http://localhost:3001/api/admin/reset-profile', {
+                                    const response = await fetch('${API_URL}/api/admin/reset-profile', {
                                       method: 'POST',
                                       headers: {
                                         'Content-Type': 'application/json',
@@ -1256,7 +1257,7 @@ export default function AdminCleanup() {
                             return
                           }
 
-                          const response = await fetch('http://localhost:3001/api/admin/reset-profile', {
+                          const response = await fetch('${API_URL}/api/admin/reset-profile', {
                             method: 'POST',
                             headers: {
                               'Content-Type': 'application/json',

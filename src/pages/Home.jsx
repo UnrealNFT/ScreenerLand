@@ -6,6 +6,7 @@ import { FaHeart, FaComment, FaShare, FaPlay, FaPause, FaChevronUp, FaChevronDow
 import toast from 'react-hot-toast'
 import { getTokenColor } from '../utils/tokenColors'
 import UserAvatar from '../components/User/UserAvatar'
+import { API_URL } from '../config'
 
 // Format time ago (e.g., "5 min ago", "2h ago")
 const timeAgo = (timestamp) => {
@@ -221,7 +222,7 @@ export default function Home() {
     try {
       setLoading(true)
       // Load ALL stories from all tokens (no 24h limit on backend)
-      const response = await fetch(`http://localhost:3001/api/stories?limit=1000`)
+      const response = await fetch(`${API_URL}/api/stories?limit=1000`)
       const data = await response.json()
       
       if (data.success) {
@@ -257,7 +258,7 @@ export default function Home() {
 
   const incrementView = async (storyId) => {
     try {
-      await fetch(`http://localhost:3001/api/stories/${storyId}/view`, {
+      await fetch(`${API_URL}/api/stories/${storyId}/view`, {
         method: 'POST'
       })
     } catch (error) {
@@ -272,7 +273,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/like`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress })
@@ -294,7 +295,7 @@ export default function Home() {
 
   const loadComments = async (storyId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/comments`)
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/comments`)
       const data = await response.json()
       
       if (data.success) {
@@ -307,7 +308,7 @@ export default function Home() {
         
         // Fetch all profiles in parallel
         const profilePromises = uniqueWallets.map(wallet => 
-          fetch(`http://localhost:3001/api/profile/${wallet}`)
+          fetch(`${API_URL}/api/profile/${wallet}`)
             .then(r => r.json())
             .then(data => ({ wallet, data }))
             .catch(err => {
@@ -349,7 +350,7 @@ export default function Home() {
     if (!commentText.trim()) return
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/comment`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -385,7 +386,7 @@ export default function Home() {
       
       if (!alreadyShared) {
         // First time: Count the share
-        const response = await fetch(`http://localhost:3001/api/stories/${storyId}/share`, {
+        const response = await fetch(`${API_URL}/api/stories/${storyId}/share`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ walletAddress: walletAddress || 'anonymous' })
@@ -490,7 +491,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress })
@@ -761,13 +762,13 @@ export default function Home() {
                       <>
                         {story.mediaType === 'image' ? (
                           <motion.img
-                            src={`http://localhost:3001${story.videoUrl}`}
+                            src={`${API_URL}${story.videoUrl}`}
                             alt="Story preview"
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         ) : (
                           <motion.video
-                            src={`http://localhost:3001${story.videoUrl}`}
+                            src={`${API_URL}${story.videoUrl}`}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             muted
                             loop
@@ -998,13 +999,13 @@ export default function Home() {
             {/* Blurred Background */}
             {currentStory.mediaType === 'image' ? (
               <img
-                src={`http://localhost:3001${currentStory.videoUrl}`}
+                src={`${API_URL}${currentStory.videoUrl}`}
                 className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-30 scale-110"
                 alt="Background"
               />
             ) : (
               <video
-                src={`http://localhost:3001${currentStory.videoUrl}`}
+                src={`${API_URL}${currentStory.videoUrl}`}
                 className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-30 scale-110"
                 autoPlay
                 loop
@@ -1017,7 +1018,7 @@ export default function Home() {
             {currentStory.mediaType === 'image' ? (
               <img
                 key={currentStory.id}
-                src={`http://localhost:3001${currentStory.videoUrl}`}
+                src={`${API_URL}${currentStory.videoUrl}`}
                 className="absolute inset-0 w-full h-full object-contain cursor-pointer"
                 alt="Story"
                 onClick={togglePlayPause}
@@ -1026,7 +1027,7 @@ export default function Home() {
               <video
                 ref={videoRef}
                 key={currentStory.id}
-                src={`http://localhost:3001${currentStory.videoUrl}`}
+                src={`${API_URL}${currentStory.videoUrl}`}
                 className="current-story-video absolute inset-0 w-full h-full object-contain"
                 autoPlay
                 loop
@@ -1230,7 +1231,7 @@ export default function Home() {
                                   const description = prompt('Additional details (optional):')
                                   
                                   try {
-                                    const response = await fetch(`http://localhost:3001/api/stories/${currentStory.id}/report`, {
+                                    const response = await fetch(`${API_URL}/api/stories/${currentStory.id}/report`, {
                                       method: 'POST',
                                       headers: { 'Content-Type': 'application/json' },
                                       body: JSON.stringify({

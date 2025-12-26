@@ -5,6 +5,7 @@ import { FaFire, FaRocket, FaFilter, FaSearch, FaChevronLeft, FaChevronRight, Fa
 import { getAllTokens } from '../services/api.service'
 import toast from 'react-hot-toast'
 import { getTokenColor } from '../utils/tokenColors'
+import { API_URL } from '../config'
 
 export default function Screener() {
   const [allTokens, setAllTokens] = useState([]) // ALL 239 tokens
@@ -41,7 +42,7 @@ export default function Screener() {
   const loadLatestTransactions = async () => {
     try {
       console.log('🔄 Loading latest transactions from backend...')
-      const response = await fetch('http://localhost:3001/api/transactions/latest?limit=50')
+      const response = await fetch(`${API_URL}/api/transactions/latest?limit=50`)
       const data = await response.json()
       
       if (data.success && data.data) {

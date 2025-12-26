@@ -97,7 +97,7 @@ class WalletService {
     try {
       // ⚠️ SECURITY: Use backend proxy instead of direct API calls
       // Frontend should NEVER contain API keys
-      const response = await fetch(`http://localhost:3001/api/balance/${this.publicKey}`, {
+      const response = await fetch(`${API_URL}/api/balance/${this.publicKey}`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -143,7 +143,7 @@ class WalletService {
       // ⚠️ SECURITY: Use backend proxy instead of direct API calls
       // Frontend should NEVER contain API keys
       const response = await fetch(
-        `http://localhost:3001/api/tokens/${this.publicKey}`,
+        `${API_URL}/api/tokens/${this.publicKey}`,
         {
           headers: {
             'Content-Type': 'application/json'

@@ -8,6 +8,7 @@ import { getAllTokens } from '../services/api.service'
 import TokenAvatar from '../components/Token/TokenAvatar'
 import UserAvatar from '../components/User/UserAvatar'
 import { getTokenColor } from '../utils/tokenColors'
+import { API_URL } from '../config'
 
 export default function ProfilePage() {
   const { walletAddress, balance, assets, network } = useWallet()
@@ -38,7 +39,7 @@ export default function ProfilePage() {
   const fetchCTOPayments = async () => {
     setCtoLoading(true)
     try {
-      const response = await fetch(`http://localhost:3001/api/cto/payment-history/${walletAddress}?network=${network}`)
+      const response = await fetch(`${API_URL}/api/cto/payment-history/${walletAddress}?network=${network}`)
       const data = await response.json()
       
       if (data.success) {
@@ -173,7 +174,7 @@ export default function ProfilePage() {
     setHistoryLoading(true)
     try {
       const response = await fetch(
-        `http://localhost:3001/api/accounts/${walletAddress}/history?network=${network}&page=${historyPage}&page_size=20`
+        `${API_URL}/api/accounts/${walletAddress}/history?network=${network}&page=${historyPage}&page_size=20`
       )
       const data = await response.json()
       
@@ -891,7 +892,7 @@ export default function ProfilePage() {
                                     formData.append('avatar', file)
                                     formData.append('walletAddress', walletAddress)
                                     
-                                    const response = await fetch('http://localhost:3001/api/users/upload-avatar', {
+                                    const response = await fetch('${API_URL}/api/users/upload-avatar', {
                                       method: 'POST',
                                       body: formData
                                     })
@@ -970,7 +971,7 @@ export default function ProfilePage() {
                       onClick={async () => {
                         try {
                           // Save to server first
-                          const response = await fetch(`http://localhost:3001/api/profile/${walletAddress}`, {
+                          const response = await fetch(`${API_URL}/api/profile/${walletAddress}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

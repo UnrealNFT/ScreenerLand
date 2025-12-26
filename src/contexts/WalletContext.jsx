@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { API_URL } from '../config'
 
 const WalletContext = createContext()
 
@@ -26,7 +27,7 @@ export function WalletProvider({ children }) {
       console.log('💰 Fetching balance for:', address, 'on network:', networkHint)
       
       // Pass network to backend so it uses the correct network
-      const response = await fetch(`http://localhost:3001/api/accounts/${address}/balance?network=${networkHint}`)
+      const response = await fetch(`${API_URL}/api/accounts/${address}/balance?network=${networkHint}`)
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -54,8 +55,8 @@ export function WalletProvider({ children }) {
       
       // Pass network to backend so it uses the correct network
       const [tokensRes, nftsRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/accounts/${address}/tokens?network=${networkHint}`),
-        fetch(`http://localhost:3001/api/accounts/${address}/nfts?network=${networkHint}`)
+        fetch(`${API_URL}/api/accounts/${address}/tokens?network=${networkHint}`),
+        fetch(`${API_URL}/api/accounts/${address}/nfts?network=${networkHint}`)
       ])
       
       const tokensData = await tokensRes.json()
