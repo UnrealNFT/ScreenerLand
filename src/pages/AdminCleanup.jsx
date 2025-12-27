@@ -94,7 +94,7 @@ export default function AdminCleanup() {
   const checkAllCTO = async () => {
     setLoading(true)
     try {
-      const response = await fetch('${API_URL}/api/admin/all-cto')
+      const response = await fetch(`${API_URL}/api/admin/all-cto`)
       const data = await response.json()
       
       if (data.success) {
@@ -132,7 +132,7 @@ export default function AdminCleanup() {
   const loadAllStories = async () => {
     setLoading(true)
     try {
-      const response = await fetch('${API_URL}/api/stories?limit=100')
+      const response = await fetch(`${API_URL}/api/stories?limit=100`)
       const data = await response.json()
       
       if (data.success) {
@@ -156,7 +156,7 @@ export default function AdminCleanup() {
     try {
       const url = status && status !== 'all' 
         ? `${API_URL}/api/admin/reports?status=${status}`
-        : '${API_URL}/api/admin/reports'
+        : `${API_URL}/api/admin/reports`
       
       const response = await fetch(url)
       const data = await response.json()
@@ -210,7 +210,7 @@ export default function AdminCleanup() {
         return
       }
 
-      const response = await fetch('${API_URL}/api/admin/profiles?limit=100', {
+      const response = await fetch(`${API_URL}/api/admin/profiles?limit=100`, {
         headers: {
           'X-Admin-Password': adminPassword
         }
@@ -239,7 +239,7 @@ export default function AdminCleanup() {
   const loadCommunityMessages = async () => {
     setLoading(true)
     try {
-      const response = await fetch('${API_URL}/api/community/messages?limit=100')
+      const response = await fetch(`${API_URL}/api/community/messages?limit=100`)
       const data = await response.json()
       
       if (data.success) {
@@ -404,7 +404,7 @@ export default function AdminCleanup() {
 
     setLoading(true)
     try {
-      const response = await fetch('${API_URL}/api/admin/clean-cto-duplicates', {
+      const response = await fetch(`${API_URL}/api/admin/clean-cto-duplicates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenHash, ownerWallet })
@@ -1178,7 +1178,7 @@ export default function AdminCleanup() {
                                       return
                                     }
 
-                                    const response = await fetch('${API_URL}/api/admin/reset-profile', {
+                                    const response = await fetch(`${API_URL}/api/admin/reset-profile`, {
                                       method: 'POST',
                                       headers: {
                                         'Content-Type': 'application/json',
@@ -1257,7 +1257,7 @@ export default function AdminCleanup() {
                             return
                           }
 
-                          const response = await fetch('${API_URL}/api/admin/reset-profile', {
+                          const response = await fetch(`${API_URL}/api/admin/reset-profile`, {
                             method: 'POST',
                             headers: {
                               'Content-Type': 'application/json',

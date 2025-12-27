@@ -129,7 +129,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
         setAccessStatus('cto-owned')
         
         // Check inactivity status
-        const inactivityResponse = await fetch('${API_URL}/api/stories/check-my-inactivity', {
+        const inactivityResponse = await fetch(`${API_URL}/api/stories/check-my-inactivity`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -151,7 +151,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
       
       // If no access, check reclaim status
       // Check if CTO can be reclaimed (current holder inactive 90+ days)
-      const reclaimResponse = await fetch('${API_URL}/api/stories/can-reclaim-cto', {
+      const reclaimResponse = await fetch(`${API_URL}/api/stories/can-reclaim-cto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,7 +198,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
       
       const packageHash = tokenData.packageHash || tokenData.contract_package_hash?.replace(/^hash-/, '') || tokenData.contractPackageHash?.replace(/^hash-/, '')
       
-      const availabilityCheck = await fetch('${API_URL}/api/stories/check-cto-availability', {
+      const availabilityCheck = await fetch(`${API_URL}/api/stories/check-cto-availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -327,7 +327,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
           console.log('📡 Sending deploy via backend...')
           console.log('📦 Deploy JSON to send:', JSON.stringify(deployJson, null, 2))
           
-          const response = await fetch('${API_URL}/api/casper/send-deploy', {
+          const response = await fetch(`${API_URL}/api/casper/send-deploy`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ deployJson })
@@ -347,7 +347,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
           
           const packageHash = tokenData.packageHash || tokenData.contract_package_hash?.replace(/^hash-/, '') || tokenData.contractPackageHash?.replace(/^hash-/, '')
           
-          const linkResponse = await fetch('${API_URL}/api/stories/link-cto-payment', {
+          const linkResponse = await fetch(`${API_URL}/api/stories/link-cto-payment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -459,7 +459,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
     try {
       const packageHash = tokenData.packageHash || tokenData.contract_package_hash?.replace(/^hash-/, '') || tokenData.contractPackageHash?.replace(/^hash-/, '')
       
-      const response = await fetch('${API_URL}/api/stories/link-cto-payment', {
+      const response = await fetch(`${API_URL}/api/stories/link-cto-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -514,7 +514,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
       toast.loading('Vérification...')
         
       // Record CTO purchase on backend with tx verification
-      const response = await fetch('${API_URL}/api/stories/claim-cto', {
+      const response = await fetch(`${API_URL}/api/stories/claim-cto`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -743,7 +743,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
       // Clean the hash (remove hash- prefix to match database format)
       const cleanHash = tokenData.contractHash?.replace('hash-', '') || tokenData.contractHash
       
-      const response = await fetch('${API_URL}/api/tokens/update-info', {
+      const response = await fetch(`${API_URL}/api/tokens/update-info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -793,7 +793,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
       formData.append('walletAddress', walletAddress)
       formData.append('tokenOwner', tokenData.owner || tokenData.ownerPublicKey)
 
-      const response = await fetch('${API_URL}/api/tokens/update-banner', {
+      const response = await fetch(`${API_URL}/api/tokens/update-banner`, {
         method: 'POST',
         body: formData
       })
@@ -864,7 +864,7 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
         duration: Math.round(duration)
       })
 
-      const response = await fetch('${API_URL}/api/stories', {
+      const response = await fetch(`${API_URL}/api/stories`, {
         method: 'POST',
         body: formData
       })

@@ -892,7 +892,7 @@ export default function ProfilePage() {
                                     formData.append('avatar', file)
                                     formData.append('walletAddress', walletAddress)
                                     
-                                    const response = await fetch('${API_URL}/api/users/upload-avatar', {
+                                    const response = await fetch(`${API_URL}/api/users/upload-avatar`, {
                                       method: 'POST',
                                       body: formData
                                     })
