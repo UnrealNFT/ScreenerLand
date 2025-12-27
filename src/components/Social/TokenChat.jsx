@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaPaperPlane, FaUsers, FaTimes, FaComments } from 'react-icons/fa'
 import UserAvatar from '../User/UserAvatar'
+import { API_URL } from '../../config'
 import { getMemberCount, subscribeMemberCount, updateMemberCount } from '../../services/chat.service'
 import { 
   connectWebSocket, 
@@ -119,7 +120,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
               let userName = formatWallet(h.walletAddress)
               let avatar = null
               try {
-                const profileRes = await fetch(`http://localhost:3001/api/profile/${h.walletAddress}`)
+                const profileRes = await fetch(`${API_URL}/api/profile/${h.walletAddress}`)
                 console.log(`📡 Profile API response status: ${profileRes.status}`)
                 if (profileRes.ok) {
                   const profileData = await profileRes.json()
@@ -187,7 +188,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
           let userName = formatWallet(msg.walletAddress)
           let avatar = null
           try {
-            const profileRes = await fetch(`http://localhost:3001/api/profile/${msg.walletAddress}`)
+            const profileRes = await fetch(`${API_URL}/api/profile/${msg.walletAddress}`)
             if (profileRes.ok) {
               const profileData = await profileRes.json()
               console.log(`🔍 Real-time profile loaded:`, profileData)

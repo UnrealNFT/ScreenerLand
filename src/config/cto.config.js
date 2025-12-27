@@ -4,9 +4,11 @@
 let runtimeConfig = null
 
 // Fetch CTO configuration from backend
+import { API_URL } from '../config'
+
 export async function fetchCTOConfig() {
   try {
-    const response = await fetch('http://localhost:3001/api/cto/config')
+    const response = await fetch(`${API_URL}/api/cto/config`)
     if (!response.ok) {
       throw new Error(`Failed to fetch CTO config: ${response.status}`)
     }

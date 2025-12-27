@@ -4,6 +4,7 @@ import { FaCopy, FaExternalLinkAlt, FaChartLine, FaUsers, FaExchangeAlt, FaFire,
 import { SiX } from 'react-icons/si'
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { API_URL } from '../config'
 import { getTokenDetails, isTokenFromCsprFun, getAllTokens } from '../services/api.service'
 import { getMemberCount, subscribeMemberCount } from '../services/chat.service'
 import { useWallet } from '../contexts/WalletContext'
@@ -282,7 +283,7 @@ export default function TokenPage() {
       // Check CTO access if wallet connected
       if (walletAddress && cleanHash) {
         try {
-          const ctoResponse = await fetch(`http://localhost:3001/api/stories/cto-access/${cleanHash}/${walletAddress}`)
+          const ctoResponse = await fetch(`${API_URL}/api/stories/cto-access/${cleanHash}/${walletAddress}`)
           const ctoData = await ctoResponse.json()
           if (ctoData.success && ctoData.hasAccess) {
             setHasCTOAccess(true)
@@ -294,7 +295,7 @@ export default function TokenPage() {
       
       // Load token info (website, X, telegram, banner)
       try {
-        const infoResponse = await fetch(`http://localhost:3001/api/tokens/info/${cleanHash}`)
+        const infoResponse = await fetch(`${API_URL}/api/tokens/info/${cleanHash}`)
         const infoData = await infoResponse.json()
         if (infoData.success && infoData.data) {
           setTokenInfo(infoData.data)
@@ -464,7 +465,7 @@ export default function TokenPage() {
           console.log(`🔑 Using hash for owner fetch: ${hashForOwner.substring(0, 20)}...`)
           
           try {
-            const packageResponse = await fetch(`http://localhost:3001/api/cspr-cloud/contract-packages/${hashForOwner}`)
+            const packageResponse = await fetch(`${API_URL}/api/cspr-cloud/contract-packages/${hashForOwner}`)
             if (packageResponse.ok) {
               const packageData = await packageResponse.json()
               if (packageData.data?.owner_public_key) {
@@ -615,7 +616,7 @@ export default function TokenPage() {
           >
             <div className="relative h-48 md:h-64">
               <img
-                src={bannerUrl.startsWith('http') ? bannerUrl : `http://localhost:3001${bannerUrl}`}
+                src={bannerUrl.startsWith('http') ? bannerUrl : `${API_URL}${bannerUrl}`}
                 alt={`${tokenData.name} banner`}
                 className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none' }}

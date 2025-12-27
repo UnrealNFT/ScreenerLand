@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { API_URL } from '../config'
 
 export function useRealtimeTransactions(contractHash) {
   const [transactions, setTransactions] = useState([])
@@ -9,7 +10,8 @@ export function useRealtimeTransactions(contractHash) {
     if (!contractHash) return
 
     // Connect to WebSocket server
-    const ws = new WebSocket('ws://localhost:3001')
+    const WS_URL = API_URL ? `wss://${API_URL.replace('https://', '')}` : 'ws://localhost:3001'
+    const ws = new WebSocket(WS_URL)
     wsRef.current = ws
 
     ws.onopen = () => {

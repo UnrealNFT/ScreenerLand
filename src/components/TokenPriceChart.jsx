@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import csprCloudService from '../services/cspr.cloud.service';
 import { FaChartLine, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { API_URL } from '../config';
 
 /**
  * Chart ultra stylé anime/manga avec effets néon
@@ -42,7 +43,7 @@ export default function TokenPriceChart({ contractPackageHash, days = 30, friend
         
         // Try to load real transactions first
         try {
-          const txResponse = await fetch(`http://localhost:3001/api/transactions/latest?limit=100&tokenSymbol=${tokenSymbol}`);
+          const txResponse = await fetch(`${API_URL}/api/transactions/latest?limit=100&tokenSymbol=${tokenSymbol}`);
           if (txResponse.ok) {
             const txData = await txResponse.json();
             if (txData.transactions && txData.transactions.length > 0) {

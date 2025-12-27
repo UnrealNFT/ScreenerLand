@@ -3,13 +3,15 @@
  * Connects to chat server for multi-user chat
  */
 
+import { API_URL } from '../config'
+
 let ws = null
 let reconnectTimer = null
 let currentTokenHash = null
 let messageHandlers = []
 let statusHandlers = []
 
-const WS_URL = 'ws://localhost:3001'
+const WS_URL = API_URL ? `wss://${API_URL.replace('https://', '')}` : 'ws://localhost:3001'
 
 /**
  * Connect to WebSocket server

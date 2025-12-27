@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaHeart, FaComment, FaShare, FaPlay, FaPause, FaTimes, FaChevronUp, FaChevronDown } from 'react-icons/fa'
 import { useWallet } from '../contexts/WalletContext'
+import { API_URL } from '../config'
 import toast from 'react-hot-toast'
 
 export default function StoriesFeed({ tokenHash, tokenSymbol }) {
@@ -28,7 +29,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
   const loadStories = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:3001/api/stories/token/${tokenHash}?limit=50`)
+      const response = await fetch(`${API_URL}/api/stories/token/${tokenHash}?limit=50`)
       const data = await response.json()
       
       if (data.success) {
@@ -45,7 +46,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
 
   const incrementView = async (storyId) => {
     try {
-      await fetch(`http://localhost:3001/api/stories/${storyId}/view`, {
+      await fetch(`${API_URL}/api/stories/${storyId}/view`, {
         method: 'POST'
       })
     } catch (error) {
@@ -60,7 +61,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/like`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress })
@@ -83,7 +84,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
 
   const loadComments = async (storyId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/comments`)
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/comments`)
       const data = await response.json()
       
       if (data.success) {
@@ -103,7 +104,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
     if (!commentText.trim()) return
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/comment`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/comment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -133,7 +134,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
 
   const shareStory = async (storyId) => {
     try {
-      await fetch(`http://localhost:3001/api/stories/${storyId}/share`, {
+      await fetch(`${API_URL}/api/stories/${storyId}/share`, {
         method: 'POST'
       })
 
@@ -217,7 +218,7 @@ export default function StoriesFeed({ tokenHash, tokenSymbol }) {
         <video
           key={currentStory.id}
           className="absolute inset-0 w-full h-full object-cover"
-          src={`http://localhost:3001${currentStory.videoUrl}`}
+          src={`${API_URL}${currentStory.videoUrl}`}
           autoPlay={isPlaying}
           loop
           muted={false}

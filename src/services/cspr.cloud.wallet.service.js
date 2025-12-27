@@ -3,10 +3,12 @@
  * REAL data from CSPR.cloud API - NO FAKE DATA
  */
 
+import { API_URL } from '../config'
+
 const CSPR_CLOUD_API = 'https://api.cspr.cloud'
 // ⚠️ SECURITY: API key removed - all requests should go through backend proxy
 // const CSPR_CLOUD_API_KEY = 'REMOVED_FOR_SECURITY'
-const API_BASE_URL = 'http://localhost:3001'  // Backend URL for proxied requests
+const API_BASE_URL = API_URL || 'http://localhost:3001'  // Backend URL for proxied requests
 
 class CsprCloudWalletService {
   /**

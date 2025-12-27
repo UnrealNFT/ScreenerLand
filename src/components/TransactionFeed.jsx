@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaArrowUp, FaArrowDown, FaExchangeAlt, FaExternalLinkAlt, FaClock, FaFire } from 'react-icons/fa'
 import { useRealtimeTransactions } from '../hooks/useRealtimeTransactions'
+import { API_URL } from '../config'
 
 export default function TransactionFeed({ contractHash, tokenSymbol, decimals = 9 }) {
   const [transactions, setTransactions] = useState([])
@@ -70,7 +71,7 @@ export default function TransactionFeed({ contractHash, tokenSymbol, decimals = 
       
       console.log(`📡 Fetching transactions page ${pageNum} for:`, cleanHash.substring(0, 20) + '...')
       
-      const url = `http://localhost:3001/api/token/${cleanHash}/transactions?limit=20&page=${pageNum}`
+      const url = `${API_URL}/api/token/${cleanHash}/transactions?limit=20&page=${pageNum}`
       const response = await fetch(url)
       
       if (!response.ok) {

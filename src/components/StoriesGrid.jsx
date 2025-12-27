@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaHeart, FaComment, FaEye, FaPlay, FaTimes } from 'react-icons/fa'
 import { useWallet } from '../contexts/WalletContext'
+import { API_URL } from '../config'
 import toast from 'react-hot-toast'
 
 // Helper functions for 24h countdown timer
@@ -48,7 +49,7 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
   const loadStories = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`http://localhost:3001/api/stories/token/${tokenHash}?limit=${limit}`)
+      const response = await fetch(`${API_URL}/api/stories/token/${tokenHash}?limit=${limit}`)
       const data = await response.json()
       
       if (data.success) {
@@ -70,7 +71,7 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}/like`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress })
@@ -142,7 +143,7 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/stories/${storyId}`, {
+      const response = await fetch(`${API_URL}/api/stories/${storyId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ walletAddress })
@@ -233,13 +234,13 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
           <div className="absolute inset-0">
             {story.mediaType === 'image' ? (
               <img
-                src={`http://localhost:3001${story.videoUrl}`}
+                src={`${API_URL}${story.videoUrl}`}
                 alt={story.caption}
                 className="w-full h-full object-cover"
               />
             ) : (
               <video
-                src={`http://localhost:3001${story.videoUrl}`}
+                src={`${API_URL}${story.videoUrl}`}
                 className="w-full h-full object-cover"
                 autoPlay={hoveredId === story.id}
                 muted
@@ -358,14 +359,14 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
             {stories[selectedStoryIndex].mediaType === 'image' ? (
               <img
                 key={stories[selectedStoryIndex].id}
-                src={`http://localhost:3001${stories[selectedStoryIndex].videoUrl}`}
+                src={`${API_URL}${stories[selectedStoryIndex].videoUrl}`}
                 alt={stories[selectedStoryIndex].caption}
                 className="absolute inset-0 w-full h-full object-contain"
               />
             ) : (
               <video
                 key={stories[selectedStoryIndex].id}
-                src={`http://localhost:3001${stories[selectedStoryIndex].videoUrl}`}
+                src={`${API_URL}${stories[selectedStoryIndex].videoUrl}`}
                 className="modal-story-video absolute inset-0 w-full h-full object-contain"
                 autoPlay
                 loop
@@ -454,7 +455,7 @@ export default function StoriesGrid({ tokenHash, tokenSymbol, limit = 12, showUp
                               const description = prompt('Additional details (optional):')
                               
                               try {
-                                const response = await fetch(`http://localhost:3001/api/stories/${stories[selectedStoryIndex].id}/report`, {
+                                const response = await fetch(`${API_URL}/api/stories/${stories[selectedStoryIndex].id}/report`, {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({

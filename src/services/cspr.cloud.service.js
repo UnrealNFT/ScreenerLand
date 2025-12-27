@@ -4,9 +4,11 @@
  * après qu'un token ait gradué vers un AMM
  */
 
+import { API_URL } from '../config'
+
 class CsprCloudService {
   constructor() {
-    this.baseUrl = 'http://localhost:3001/api/cspr-cloud';
+    this.baseUrl = `${API_URL}/api/cspr-cloud`;
     // Backend proxy handles API key
     this.apiKey = import.meta.env.VITE_CSPR_CLOUD_API_KEY || '';
     
