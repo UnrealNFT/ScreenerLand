@@ -1,14 +1,22 @@
 // ScreenerLand - Real CSPR.cloud API Service
 // Connects to Casper blockchain via CSPR.cloud
+import { API_URL } from '../config'
 
 const API_CONFIG = {
-  // Use proxy in development, direct API in production
-  baseUrl: import.meta.env.DEV ? '/api' : 'https://api.cspr.cloud',
+  // PRODUCTION: Must use backend proxy to avoid CORS
+  // DEV: Use Vite proxy configured in vite.config.js
+  baseUrl: import.meta.env.PROD ? `${API_URL}/api/cspr` : '/api',
   apiKey: '0198d342-112b-743b-aaf7-61745bdd3ecd',
   headers: {
     'Content-Type': 'application/json'
   }
 }
+
+console.log('🔧 API Service Config:', { 
+  mode: import.meta.env.MODE, 
+  isProd: import.meta.env.PROD,
+  baseUrl: API_CONFIG.baseUrl 
+})
 
 /**
  * Make API request with error handling
