@@ -551,6 +551,37 @@ app.get('/api/cspr-cloud/contract-packages/:hash', async (req, res) => {
   }
 })
 
+// ==================== CONTRACT PACKAGES LIST (FOR SCREENER) ====================
+// Get ALL contract packages with pagination (for token list)
+app.get('/api/cspr-cloud/contract-packages', async (req, res) => {
+  try {
+    const { page = 1, page_size = 100, contract_type_id = 2 } = req.query
+    const url = `${CSPR_CLOUD_API}/contract-packages?page=${page}&page_size=${page_size}&contract_type_id=${contract_type_id}`
+    
+    console.log(`📦 Fetching contract packages: page=${page}, size=${page_size}`)
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': API_KEYS.general
+      }
+    })
+
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error(`❌ Contract packages API: ${response.status}`, data)
+      return res.status(response.status).json(data)
+    }
+
+    console.log(`✅ Fetched ${data.data?.length || 0} contract packages`)
+    res.json(data)
+  } catch (error) {
+    console.error('❌ Contract packages error:', error.message)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // Get contracts by package hash (to find actual contract hash)
 app.get('/api/cspr-cloud/contracts', async (req, res) => {
   try {

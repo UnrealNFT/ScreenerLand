@@ -5,7 +5,7 @@ import { API_URL } from '../config'
 const API_CONFIG = {
   // PRODUCTION: Must use backend proxy to avoid CORS
   // DEV: Use Vite proxy configured in vite.config.js
-  baseUrl: import.meta.env.PROD ? `${API_URL}/api/cspr` : '/api',
+  baseUrl: import.meta.env.PROD ? `${API_URL}/api/cspr-cloud` : '/api',
   apiKey: '0198d342-112b-743b-aaf7-61745bdd3ecd',
   headers: {
     'Content-Type': 'application/json'
