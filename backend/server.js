@@ -51,7 +51,7 @@ function setCachedData(key, data) {
 
 // Middleware
 app.use(cors({
-  origin: ['https://screenerland.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: ['https://screener.land', 'https://www.screener.land', 'https://screenerland.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
