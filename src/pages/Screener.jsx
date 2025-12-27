@@ -78,12 +78,19 @@ export default function Screener() {
         console.warn('⚠️ Failed to fetch CSPR from CoinGecko:', err)
       }
       
-      // Fetch CEP-18 tokens
+      // Fetch ALL CEP-18 tokens at once (no pagination needed)
       const data = await getAllTokens(1, 1000)
-      setAllTokens(data.tokens)
+      console.log('📊 Loaded tokens data:', data)
+      console.log('📊 Total available:', data.totalCount, '| Returned:', data.tokens?.length || 0)
+      
+      // If we have a cache with all tokens, use it directly
+      const allTokensFromCache = window._allTokensCache || data.tokens || []
+      console.log('📊 Setting allTokens with', allTokensFromCache.length, 'tokens')
+      setAllTokens(allTokensFromCache)
     } catch (error) {
       console.error('Error loading tokens:', error)
       toast.error('Failed to load tokens')
+      setAllTokens([])
     } finally {
       setLoading(false)
     }
@@ -145,6 +152,14 @@ export default function Screener() {
   const startIndex = (page - 1) * pageSize
   const endIndex = startIndex + pageSize
   const paginatedTokens = filteredAndSortedTokens.slice(startIndex, endIndex)
+  
+  console.log('🔍 Screener render:', {
+    allTokens: allTokens.length,
+    filtered: filteredAndSortedTokens.length,
+    paginated: paginatedTokens.length,
+    page,
+    totalPages
+  })
 
   return (
     <div className="min-h-screen pt-20 pb-24 px-4">
