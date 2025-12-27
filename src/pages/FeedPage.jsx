@@ -20,7 +20,7 @@ export default function FeedPage() {
 
   const loadCommunityFeed = async () => {
     try {
-      const response = await fetch('${API_URL}/api/communities/latest-messages')
+      const response = await fetch(`${API_URL}/api/communities/latest-messages`)
       const data = await response.json()
       
       if (data.success) {
@@ -35,7 +35,7 @@ export default function FeedPage() {
 
   const loadStoryRanking = async () => {
     try {
-      const response = await fetch('${API_URL}/api/stories/ranking/24h')
+      const response = await fetch(`${API_URL}/api/stories/ranking/24h`)
       const data = await response.json()
       
       if (data.success) {
