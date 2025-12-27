@@ -50,7 +50,12 @@ function setCachedData(key, data) {
 }
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: ['https://screenerland.netlify.app', 'http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
 app.use(express.json({ limit: '50mb' })) // Increase limit for video uploads
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
