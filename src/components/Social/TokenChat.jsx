@@ -76,8 +76,17 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
       setWsStatus(status)
     })
     
-    // Subscribe to incoming messages
+    // Subscribe to incoming messages - wrapped to prevent duplicate messages
+    let messageProcessed = new Set() // Track processed message IDs
     const unsubscribeMessages = onMessage(async (msg) => {
+      // Skip duplicate messages
+      const msgKey = `${msg.type}-${msg.id || msg.timestamp}`
+      if (messageProcessed.has(msgKey)) {
+        console.log('⏭️ Skipping duplicate message:', msgKey)
+        return
+      }
+      messageProcessed.add(msgKey)
+      
       console.log('📩 Received WebSocket message:', msg.type)
       
       switch (msg.type) {
@@ -225,6 +234,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
     // Cleanup on unmount
     return () => {
       console.log('🧹 Cleaning up WebSocket connection')
+      messageProcessed.clear() // Clear processed messages on cleanup
       unsubscribeStatus()
       unsubscribeMessages()
       
