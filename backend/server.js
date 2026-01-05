@@ -3255,7 +3255,7 @@ app.post('/api/tokens/update-banner', upload.single('banner'), async (req, res) 
       return res.status(403).json({ error: 'You do not have permission to update this token' })
     }
     
-    const bannerPath = `/uploads/${req.file.filename}`
+    const bannerPath = `https://api.screener.land/uploads/${req.file.filename}`
     
     // Resolve to get both hashes
     let hashesToUpdate = [tokenHash]
