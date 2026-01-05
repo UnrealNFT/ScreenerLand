@@ -3229,14 +3229,23 @@ app.post('/api/tokens/update-info', async (req, res) => {
 
 // Update token banner
 app.post('/api/tokens/update-banner', upload.single('banner'), async (req, res) => {
+  console.log('🎨 BANNER UPDATE REQUEST:', {
+    tokenHash: req.body.tokenHash?.substring(0, 10),
+    walletAddress: req.body.walletAddress?.substring(0, 10),
+    hasFile: !!req.file,
+    fileName: req.file?.filename
+  })
+  
   try {
     const { tokenHash, walletAddress, tokenOwner } = req.body
     
     if (!tokenHash || !walletAddress) {
+      console.log('❌ Missing tokenHash or walletAddress')
       return res.status(400).json({ error: 'Token hash and wallet address required' })
     }
     
     if (!req.file) {
+      console.log('❌ No file uploaded')
       return res.status(400).json({ error: 'Banner image required' })
     }
     
