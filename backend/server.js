@@ -1699,7 +1699,7 @@ app.post('/api/profile/:wallet', async (req, res) => {
   }
 })
 
-// Upload avatar
+// Upload avatar (OLD endpoint - kept for backwards compatibility)
 app.post('/api/users/upload-avatar', upload.single('avatar'), async (req, res) => {
   try {
     const { walletAddress } = req.body
@@ -1712,9 +1712,18 @@ app.post('/api/users/upload-avatar', upload.single('avatar'), async (req, res) =
       return res.status(400).json({ success: false, error: 'Wallet address required' })
     }
     
-    const avatarUrl = `http://localhost:3001/uploads/${req.file.filename}`
+    const avatarUrl = `https://api.screener.land/uploads/${req.file.filename}`
     
     console.log(`✅ Avatar uploaded for ${walletAddress}: ${avatarUrl}`)
+    
+    // Also store in database
+    await query(
+      `INSERT INTO user_profiles (wallet_address, avatar_url, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (wallet_address)
+       DO UPDATE SET avatar_url = $2, updated_at = NOW()`,
+      [walletAddress.toLowerCase(), avatarUrl]
+    )
     
     res.json({ 
       success: true, 
