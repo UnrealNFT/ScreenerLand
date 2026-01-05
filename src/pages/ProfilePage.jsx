@@ -912,8 +912,11 @@ export default function ProfilePage() {
                                     
                                     const data = await response.json()
                                     
+                                    console.log('🖼️ Avatar upload response:', data)
+                                    
                                     if (data.success) {
                                       // Save URL instead of base64
+                                      console.log('✅ Setting new avatar URL:', data.avatarUrl)
                                       setProfile({ ...profile, avatar: data.avatarUrl })
                                       toast.success('Avatar uploaded!')
                                     } else {
