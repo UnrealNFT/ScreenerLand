@@ -740,8 +740,8 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
     setIsUploading(true)
 
     try {
-      // Clean the hash (remove hash- prefix to match database format)
-      const cleanHash = tokenData.contractHash?.replace('hash-', '') || tokenData.contractHash
+      // Use packageHash for CTO verification (CTO is registered with packageHash)
+      const cleanHash = (tokenData.packageHash || tokenData.contract_package_hash)?.replace('hash-', '') || tokenData.packageHash
       
       const response = await fetch(`${API_URL}/api/tokens/update-info`, {
         method: 'POST',
@@ -784,8 +784,8 @@ export default function StoryUpload({ tokenData, onUploadComplete, onClose }) {
     setIsUploading(true)
 
     try {
-      // Clean the hash (remove hash- prefix to match database format)
-      const cleanHash = tokenData.contractHash?.replace('hash-', '') || tokenData.contractHash
+      // Use packageHash for CTO verification (CTO is registered with packageHash)
+      const cleanHash = (tokenData.packageHash || tokenData.contract_package_hash)?.replace('hash-', '') || tokenData.packageHash
       
       const formData = new FormData()
       formData.append('banner', bannerFile)
