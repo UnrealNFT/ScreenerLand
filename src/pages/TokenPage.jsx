@@ -614,11 +614,11 @@ export default function TokenPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="relative h-48 md:h-64 bg-dark/20">
+            <div className="relative w-full" style={{ aspectRatio: '7/1' }}>
               <img
                 src={bannerUrl.startsWith('http') ? bannerUrl : `${API_URL}${bannerUrl}`}
                 alt={`${tokenData.name} banner`}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent pointer-events-none" />
