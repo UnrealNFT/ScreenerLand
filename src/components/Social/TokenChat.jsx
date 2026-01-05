@@ -23,6 +23,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
   const [userCount, setUserCount] = useState(0)
   const [wsStatus, setWsStatus] = useState('disconnected')
   const messagesEndRef = useRef(null)
+  const messageProcessedRef = useRef(new Set()) // Use ref to persist across renders
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -75,16 +76,15 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
       console.log('🔌 WebSocket status:', status)
       setWsStatus(status)
     })
-    
-    // Subscribe to incoming messages - wrapped to prevent duplicate messages
-    let messageProcessed = new Set() // Track processed message IDs
+    use ref to track processed messages
     const unsubscribeMessages = onMessage(async (msg) => {
       // Skip duplicate messages
       const msgKey = `${msg.type}-${msg.id || msg.timestamp}`
-      if (messageProcessed.has(msgKey)) {
+      if (messageProcessedRef.current.has(msgKey)) {
         console.log('⏭️ Skipping duplicate message:', msgKey)
         return
       }
+      messageProcessedRef.current
       messageProcessed.add(msgKey)
       
       console.log('📩 Received WebSocket message:', msg.type)
@@ -235,7 +235,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
     return () => {
       console.log('🧹 Cleaning up WebSocket connection')
       messageProcessed.clear() // Clear processed messages on cleanup
-      unsubscribeStatus()
+      unsubscribeStatuRef.currents()
       unsubscribeMessages()
       
       // IMPORTANT: Leave room if joined
