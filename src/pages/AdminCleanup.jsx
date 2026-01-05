@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { API_URL } from '../config'
 
 export default function AdminCleanup() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [passwordInput, setPasswordInput] = useState('')
   const [activeTab, setActiveTab] = useState('cto') // 'cto' | 'stories' | 'reports' | 'chat' | 'community'
   const [tokenHash, setTokenHash] = useState('de1ecc0d030cb2fba62098db5c53ca1b28a9a8e4138dea47ef42f6b285bda423')
   const [ownerWallet, setOwnerWallet] = useState('0203d7710216e4967ee0873c6ad05e5605c7ac725cafe2ee1829cc6705badf477445')
@@ -25,6 +27,62 @@ export default function AdminCleanup() {
   const [resetResult, setResetResult] = useState(null)
   const [allProfiles, setAllProfiles] = useState([])
   const [profilesLoading, setProfilesLoading] = useState(false)
+
+  // Check authentication on mount
+  useEffect(() => {
+    const savedAuth = sessionStorage.getItem('adminAuth')
+    if (savedAuth === 'yy3523vega') {
+      setIsAuthenticated(true)
+    }
+  }, [])
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    if (passwordInput === 'yy3523vega') {
+      setIsAuthenticated(true)
+      sessionStorage.setItem('adminAuth', 'yy3523vega')
+      setPasswordInput('')
+    } else {
+      alert('Invalid password')
+      setPasswordInput('')
+    }
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel p-8 rounded-2xl max-w-md w-full"
+        >
+          <h1 className="text-3xl font-bold text-white mb-6 text-center">
+            🔒 Admin Access
+          </h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-white/80 mb-2">Enter Password</label>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full px-4 py-3 bg-dark-card border border-gray-700 rounded-xl text-white focus:border-primary focus:outline-none"
+                placeholder="Enter admin password"
+                autoFocus
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full btn-primary py-3 rounded-xl font-semibold"
+            >
+              Login
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     // Load chat history from localStorage
