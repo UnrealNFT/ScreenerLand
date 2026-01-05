@@ -36,6 +36,14 @@ export default function AdminCleanup() {
     }
   }, [])
 
+  // Load chat history from localStorage
+  useEffect(() => {
+    const savedChat = localStorage.getItem('adminChat')
+    if (savedChat) {
+      setChatMessages(JSON.parse(savedChat))
+    }
+  }, [])
+
   const handleLogin = (e) => {
     e.preventDefault()
     if (passwordInput === 'yy3523vega') {
@@ -88,14 +96,6 @@ export default function AdminCleanup() {
       </div>
     )
   }
-
-  useEffect(() => {
-    // Load chat history from localStorage
-    const savedChat = localStorage.getItem('adminChat')
-    if (savedChat) {
-      setChatMessages(JSON.parse(savedChat))
-    }
-  }, [])
 
   const sendChatMessage = () => {
     if (!newMessage.trim()) return
