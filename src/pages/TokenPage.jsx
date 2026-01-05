@@ -610,18 +610,18 @@ export default function TokenPage() {
         {/* Banner Section (if exists) */}
         {bannerUrl && (
           <motion.div
-            className="glass rounded-3xl overflow-hidden"
+            className="rounded-3xl overflow-hidden"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="relative w-full" style={{ aspectRatio: '7/1' }}>
+            <div className="relative w-full">
               <img
                 src={bannerUrl.startsWith('http') ? bannerUrl : `${API_URL}${bannerUrl}`}
                 alt={`${tokenData.name} banner`}
-                className="w-full h-full object-cover"
+                className="w-full h-auto"
                 onError={(e) => { e.target.style.display = 'none' }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/80 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-dark/50 to-transparent pointer-events-none" />
             </div>
           </motion.div>
         )}
