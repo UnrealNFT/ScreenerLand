@@ -10,10 +10,10 @@ const __dirname = dirname(__filename)
 
 // Database connection configuration
 const pool = new Pool({
-  user: 'postgres',
+  user: 'screenerfun',
   host: 'localhost',
   database: 'screenerfun',
-  password: process.env.DATABASE_PASSWORD || '3523',
+  password: process.env.DATABASE_PASSWORD || 'testpass123',
   port: 5432,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20, // Maximum pool size
