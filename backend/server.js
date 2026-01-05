@@ -3307,6 +3307,51 @@ app.post('/api/tokens/update-banner', upload.single('banner'), async (req, res) 
   }
 })
 
+// Update user profile avatar
+app.post('/api/profile/update-avatar', upload.single('avatar'), async (req, res) => {
+  console.log('👤 AVATAR UPDATE REQUEST:', {
+    walletAddress: req.body.walletAddress?.substring(0, 10),
+    hasFile: !!req.file,
+    fileName: req.file?.filename
+  })
+  
+  try {
+    const { walletAddress } = req.body
+    
+    if (!walletAddress) {
+      console.log('❌ Missing walletAddress')
+      return res.status(400).json({ error: 'Wallet address required' })
+    }
+    
+    if (!req.file) {
+      console.log('❌ No file uploaded')
+      return res.status(400).json({ error: 'Avatar image required' })
+    }
+    
+    const avatarPath = `https://api.screener.land/uploads/${req.file.filename}`
+    
+    // Store avatar in user_profiles table
+    await query(
+      `INSERT INTO user_profiles (wallet_address, avatar_url, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (wallet_address)
+       DO UPDATE SET avatar_url = $2, updated_at = NOW()`,
+      [walletAddress.toLowerCase(), avatarPath]
+    )
+    
+    console.log('✅ Avatar updated for wallet:', walletAddress.substring(0, 12) + '...')
+    
+    res.json({
+      success: true,
+      message: 'Avatar updated successfully',
+      avatarUrl: avatarPath
+    })
+  } catch (error) {
+    console.error('❌ Update avatar error:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // Get token info (for display on token page)
 app.get('/api/tokens/info/:tokenHash', async (req, res) => {
   try {
