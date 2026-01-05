@@ -905,7 +905,7 @@ export default function ProfilePage() {
                                     formData.append('avatar', file)
                                     formData.append('walletAddress', walletAddress)
                                     
-                                    const response = await fetch(`${API_URL}/api/users/upload-avatar`, {
+                                    const response = await fetch(`${API_URL}/api/profile/update-avatar`, {
                                       method: 'POST',
                                       body: formData
                                     })
@@ -917,7 +917,7 @@ export default function ProfilePage() {
                                       setProfile({ ...profile, avatar: data.avatarUrl })
                                       toast.success('Avatar uploaded!')
                                     } else {
-                                      toast.error('Upload failed')
+                                      toast.error(data.error || 'Upload failed')
                                     }
                                   } catch (error) {
                                     console.error('Upload error:', error)
