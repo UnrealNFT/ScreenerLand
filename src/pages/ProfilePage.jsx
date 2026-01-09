@@ -910,9 +910,12 @@ export default function ProfilePage() {
                                       body: formData
                                     })
                                     
+                                    console.log('🌐 Response status:', response.status, response.statusText)
+                                    console.log('🌐 Response OK:', response.ok)
+                                    
                                     const data = await response.json()
                                     
-                                    console.log('🖼️ Avatar upload response:', data)
+                                    console.log('🖼️ Avatar upload response:', JSON.stringify(data, null, 2))
                                     
                                     if (data.success) {
                                       // Save URL instead of base64
@@ -920,6 +923,7 @@ export default function ProfilePage() {
                                       setProfile({ ...profile, avatar: data.avatarUrl })
                                       toast.success('Avatar uploaded!')
                                     } else {
+                                      console.log('❌ Upload failed:', data.error)
                                       toast.error(data.error || 'Upload failed')
                                     }
                                   } catch (error) {
