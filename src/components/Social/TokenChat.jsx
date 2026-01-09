@@ -233,8 +233,8 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
     // Cleanup on unmount
     return () => {
       console.log('🧹 Cleaning up WebSocket connection')
-      messageProcessed.clear() // Clear processed messages on cleanup
-      unsubscribeStatuRef.currents()
+      messageProcessedRef.current.clear() // Clear processed messages on cleanup
+      unsubscribeStatus()
       unsubscribeMessages()
       
       // IMPORTANT: Leave room if joined
