@@ -7,6 +7,7 @@ import path, { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import crypto from 'crypto'
 import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
 import { startEventListener, getRecentTransactions, wsClients } from './event-listener.js'
 import { startRewardsCronJob } from './rewards-cron.js'
 import { startCTOListener } from './cto-payment-listener.js'
@@ -97,6 +98,55 @@ startEventListener()
 // Start the story rewards cron job (runs daily at 00:00)
 console.log('🎁 Starting story rewards cron job...')
 startRewardsCronJob()
+
+// ==================== ADMIN AUTHENTICATION ====================
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex')
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'yy3523vega'
+
+// Admin authentication endpoint
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body
+  
+  console.log('🔐 Admin login attempt')
+  
+  if (password === ADMIN_PASSWORD) {
+    const token = jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: '24h' })
+    console.log('✅ Admin login successful')
+    res.json({ success: true, token })
+  } else {
+    console.log('❌ Admin login failed - invalid password')
+    res.status(401).json({ success: false, error: 'Invalid password' })
+  }
+})
+
+// Verify admin token endpoint
+app.get('/api/admin/verify', verifyAdminToken, (req, res) => {
+  res.json({ success: true, admin: true })
+})
+
+// Middleware to verify admin token
+function verifyAdminToken(req, res, next) {
+  const authHeader = req.headers.authorization
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, error: 'No token provided' })
+  }
+  
+  const token = authHeader.substring(7)
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET)
+    if (decoded.admin) {
+      req.admin = decoded
+      next()
+    } else {
+      res.status(403).json({ success: false, error: 'Not authorized' })
+    }
+  } catch (error) {
+    console.error('❌ Token verification failed:', error.message)
+    res.status(401).json({ success: false, error: 'Invalid or expired token' })
+  }
+}
 
 // cspr.cloud API proxy with rotation system
 const CSPR_CLOUD_API = 'https://api.cspr.cloud'

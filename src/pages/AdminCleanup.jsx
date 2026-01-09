@@ -5,6 +5,8 @@ import { API_URL } from '../config'
 export default function AdminCleanup() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [passwordInput, setPasswordInput] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('cto') // 'cto' | 'stories' | 'reports' | 'chat' | 'community'
   const [tokenHash, setTokenHash] = useState('de1ecc0d030cb2fba62098db5c53ca1b28a9a8e4138dea47ef42f6b285bda423')
   const [ownerWallet, setOwnerWallet] = useState('0203d7710216e4967ee0873c6ad05e5605c7ac725cafe2ee1829cc6705badf477445')
@@ -30,9 +32,25 @@ export default function AdminCleanup() {
 
   // Check authentication on mount
   useEffect(() => {
-    const savedAuth = localStorage.getItem('adminAuth')
-    if (savedAuth === 'yy3523vega') {
-      setIsAuthenticated(true)
+    const token = localStorage.getItem('adminToken')
+    if (token) {
+      // Verify token is still valid by making a test request
+      fetch(`${API_URL}/api/admin/verify`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setIsAuthenticated(true)
+        } else {
+          localStorage.removeItem('adminToken')
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('adminToken')
+      })
     }
   }, [])
 
@@ -44,21 +62,40 @@ export default function AdminCleanup() {
     }
   }, [])
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    if (passwordInput === 'yy3523vega') {
-      setIsAuthenticated(true)
-      localStorage.setItem('adminAuth', 'yy3523vega')
-      setPasswordInput('')
-    } else {
-      alert('Invalid password')
-      setPasswordInput('')
+    setLoginError('')
+    setLoginLoading(true)
+    
+    try {
+      const response = await fetch(`${API_URL}/api/admin/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password: passwordInput })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success && data.token) {
+        localStorage.setItem('adminToken', data.token)
+        setIsAuthenticated(true)
+        setPasswordInput('')
+      } else {
+        setLoginError('Invalid password')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setLoginError('Connection error. Please try again.')
+    } finally {
+      setLoginLoading(false)
     }
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
-    localStorage.removeItem('adminAuth')
+    localStorage.removeItem('adminToken')
   }
 
   // Show login screen if not authenticated
@@ -79,22 +116,56 @@ export default function AdminCleanup() {
               <input
                 type="password"
                 value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value)
+                  setLoginError('')
+                }}
                 className="w-full px-4 py-3 bg-dark-card border border-gray-700 rounded-xl text-white focus:border-primary focus:outline-none"
                 placeholder="Enter admin password"
                 autoFocus
+                disabled={loginLoading}
               />
+              {loginError && (
+                <p className="text-red-400 text-sm mt-2">⚠️ {loginError}</p>
+              )}
             </div>
             <button
               type="submit"
-              className="w-full btn-primary py-3 rounded-xl font-semibold"
+              className="w-full btn-primary py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loginLoading}
             >
-              Login
+              {loginLoading ? 'Verifying...' : 'Login'}
             </button>
           </form>
         </motion.div>
       </div>
     )
+  }
+
+  // Helper function to make authenticated admin requests
+  const adminFetch = async (url, options = {}) => {
+    const token = localStorage.getItem('adminToken')
+    if (!token) {
+      setIsAuthenticated(false)
+      throw new Error('No authentication token')
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (response.status === 401 || response.status === 403) {
+      // Token expired or invalid
+      localStorage.removeItem('adminToken')
+      setIsAuthenticated(false)
+      throw new Error('Authentication expired')
+    }
+
+    return response
   }
 
   const sendChatMessage = () => {
