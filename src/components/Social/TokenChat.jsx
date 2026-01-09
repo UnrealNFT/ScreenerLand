@@ -76,7 +76,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
       console.log('🔌 WebSocket status:', status)
       setWsStatus(status)
     })
-    use ref to track processed messages
+    
     const unsubscribeMessages = onMessage(async (msg) => {
       // Skip duplicate messages
       const msgKey = `${msg.type}-${msg.id || msg.timestamp}`
@@ -84,8 +84,7 @@ export default function TokenChat({ tokenHash, tokenName, tokenSymbol, tokenLogo
         console.log('⏭️ Skipping duplicate message:', msgKey)
         return
       }
-      messageProcessedRef.current
-      messageProcessed.add(msgKey)
+      messageProcessedRef.current.add(msgKey)
       
       console.log('📩 Received WebSocket message:', msg.type)
       
