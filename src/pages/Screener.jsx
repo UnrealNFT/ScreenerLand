@@ -85,15 +85,15 @@ export default function Screener() {
       console.log('📊 Loaded tokens data:', data)
       console.log('📊 Total available:', data.totalCount, '| Returned:', data.tokens?.length || 0)
       
-      // If we have a cache with all tokens, use it directly
-      const allTokensFromCache = window._allTokensCache || data.tokens || []
-      console.log('📊 Setting allTokens with', allTokensFromCache.length, 'tokens')
+      // Use tokens from backend (already enriched with market cap)
+      const allTokensFromBackend = data.tokens || []
+      console.log('📊 Setting allTokens with', allTokensFromBackend.length, 'tokens')
       
       // Count tokens with market cap data
-      const tokensWithMcap = allTokensFromCache.filter(t => t.marketCapUSD > 0).length
-      console.log(`💰 ${tokensWithMcap}/${allTokensFromCache.length} tokens have market cap data`)
+      const tokensWithMcap = allTokensFromBackend.filter(t => t.marketCapUSD > 0).length
+      console.log(`💰 ${tokensWithMcap}/${allTokensFromBackend.length} tokens have market cap data`)
       
-      setAllTokens(allTokensFromCache)
+      setAllTokens(allTokensFromBackend)
       setEnrichingMarketCap(false)
     } catch (error) {
       console.error('Error loading tokens:', error)
@@ -166,9 +166,9 @@ export default function Screener() {
           bVal = new Date(b.timestamp).getTime()
           return sortDir === 'asc' ? aVal - bVal : bVal - aVal
         case 'marketCap':
-          // Use deployCount as proxy for market cap (activity = bigger market cap)
-          aVal = parseFloat(a.deployCount || 0)
-          bVal = parseFloat(b.deployCount || 0)
+          // Use REAL market cap from backend (CSPR.fun API)
+          aVal = parseFloat(a.marketCapUSD || 0)
+          bVal = parseFloat(b.marketCapUSD || 0)
           return sortDir === 'desc' ? bVal - aVal : aVal - bVal
         default:
           return 0
