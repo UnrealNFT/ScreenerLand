@@ -2796,6 +2796,112 @@ app.get('/api/cto/payment-history/:walletAddress', async (req, res) => {
   }
 })
 
+// ==================== TOKENS SCREENER WITH MARKET CAP ====================
+// Get all tokens with market cap enrichment (backend-side for performance)
+app.get('/api/tokens/screener', async (req, res) => {
+  try {
+    console.log('🔍 Fetching ALL tokens with market cap enrichment...')
+    const startTime = Date.now()
+    
+    // 1. Fetch ALL CEP-18 tokens from cspr.cloud
+    const allContracts = []
+    let apiPage = 1
+    let hasMore = true
+    
+    while (hasMore && apiPage <= 10) {
+      try {
+        const url = `${CSPR_CLOUD_API}/contract-packages?page=${apiPage}&page_size=100&contract_type_id=2`
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': API_KEYS.owner
+          }
+        })
+        
+        if (!response.ok) break
+        
+        const data = await response.json()
+        allContracts.push(...(data.data || []))
+        hasMore = data.data.length === 100
+        apiPage++
+      } catch (error) {
+        console.warn(`⚠️ Failed to fetch tokens page ${apiPage}:`, error.message)
+        break
+      }
+    }
+    
+    console.log(`📦 Fetched ${allContracts.length} contracts from cspr.cloud`)
+    
+    // 2. Filter to real CEP-18 tokens (exclude NFTs)
+    const allTokens = allContracts
+      .filter(token => token.latest_version_contract_type_id === 2)
+      .map(token => {
+        const metadata = token.metadata || {}
+        return {
+          contractHash: token.contract_package_hash,
+          name: token.name || metadata.name || 'Unknown Token',
+          symbol: metadata.symbol || token.contract_name?.substring(0, 4).toUpperCase() || 'TKN',
+          logo: token.icon_url || metadata.logo || null,
+          timestamp: token.timestamp || null,
+          decimals: metadata.decimals || 9,
+          totalSupply: metadata.total_supply || '0',
+          isCsprFun: (token.icon_url || '').includes('cspr.fun') || 
+                     (metadata.logo || '').includes('cspr.fun'),
+          marketCapUSD: 0 // Will be enriched below
+        }
+      })
+    
+    console.log(`✅ Filtered to ${allTokens.length} CEP-18 tokens`)
+    
+    // 3. Enrich with CSPR.fun API data (market cap for non-graduated tokens)
+    console.log('💰 Enriching with CSPR.fun market caps...')
+    try {
+      const csprFunResponse = await fetch('https://api.cspr.fun/api/v1/tokens/featured?sortBy=vol&sortDir=desc&limit=100&skip=0')
+      if (csprFunResponse.ok) {
+        const csprFunData = await csprFunResponse.json()
+        const csprFunTokens = csprFunData.data || []
+        const csprPriceUSD = 0.0059
+        
+        let enrichedCount = 0
+        for (const token of allTokens) {
+          const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+          const found = csprFunTokens.find(t => 
+            t.contractHash === cleanHash || 
+            t.contractPackageHash === cleanHash
+          )
+          
+          if (found && !found.isGraduated && found.marketCapCSPR) {
+            token.marketCapUSD = parseFloat(found.marketCapCSPR) * csprPriceUSD
+            token.marketCapCSPR = found.marketCapCSPR
+            token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
+            token.liquidityCSPR = found.csprReserveUi
+            token.volumeCSPR = found.allTimeVolumeCSPR
+            enrichedCount++
+          }
+        }
+        
+        console.log(`✅ Enriched ${enrichedCount} tokens with CSPR.fun market caps`)
+      }
+    } catch (err) {
+      console.warn('⚠️ CSPR.fun enrichment failed:', err.message)
+    }
+    
+    const elapsed = Date.now() - startTime
+    console.log(`✅ Screener tokens ready in ${elapsed}ms`)
+    
+    res.json({
+      success: true,
+      tokens: allTokens,
+      totalCount: allTokens.length,
+      enrichedCount: allTokens.filter(t => t.marketCapUSD > 0).length
+    })
+    
+  } catch (error) {
+    console.error('❌ Tokens screener error:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // ✅ Report a story
 app.post('/api/stories/:id/report', async (req, res) => {
   try {

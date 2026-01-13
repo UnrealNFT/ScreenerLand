@@ -166,8 +166,9 @@ export default function Screener() {
           bVal = new Date(b.timestamp).getTime()
           return sortDir === 'asc' ? aVal - bVal : bVal - aVal
         case 'marketCap':
-          aVal = parseFloat(a.marketCapUSD || a.marketCapCSPR || 0)
-          bVal = parseFloat(b.marketCapUSD || b.marketCapCSPR || 0)
+          // Use deployCount as proxy for market cap (activity = bigger market cap)
+          aVal = parseFloat(a.deployCount || 0)
+          bVal = parseFloat(b.deployCount || 0)
           return sortDir === 'desc' ? bVal - aVal : aVal - bVal
         default:
           return 0

@@ -144,137 +144,31 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
   return balance
 }
 
-/**
- * Enrich tokens with REAL market cap from Friendly.Market
- * Uses contract hash like TokenPage does (not package hash)
- */
-async function enrichTokensWithMarketData(tokens) {
-  console.log(`💰 Loading REAL market caps from Friendly.Market for ${tokens.length} tokens...`)
-  
-  let enriched = 0
-  let noData = 0
-  
-  // Process in smaller batches to avoid overwhelming API
-  const batchSize = 5
-  for (let i = 0; i < tokens.length; i += batchSize) {
-    const batch = tokens.slice(i, i + batchSize)
-    
-    await Promise.all(
-      batch.map(async (token) => {
-        try {
-          // Use contract hash (same logic as TokenPage)
-          const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
-          
-          const pairData = await getFriendlyMarketPairData(cleanHash)
-          
-          if (pairData && pairData.marketCap && pairData.marketCap.usd > 0) {
-            token.marketCapUSD = pairData.marketCap.usd
-            token.marketCapCSPR = pairData.marketCap.cspr
-            token.liquidityUSD = pairData.liquidity.usd
-            token.volume24hUSD = pairData.volume.daily
-            token.priceCSPR = pairData.price.cspr
-            enriched++
-          } else {
-            noData++
-          }
-        } catch (error) {
-          noData++
-        }
-      })
-    )
-    
-    // Progress log
-    if ((i + batchSize) % 25 === 0) {
-      console.log(`  Progress: ${Math.min(i + batchSize, tokens.length)}/${tokens.length} (${enriched} with data)`)
-    }
-    
-    // Delay between batches
-    await new Promise(resolve => setTimeout(resolve, 300))
-  }
-  
-  console.log(`✅ Market data loaded: ${enriched} tokens have REAL market cap, ${noData} not on DEX`)
-}
+// enrichTokensWithMarketData() removed - now done in backend
 
 /**
- * Get all CEP-18 tokens
- */
-/**
- * Get all CEP-18 tokens (excludes NFTs)
- * Since there are only ~237 tokens, we fetch them all at once
+ * Get all CEP-18 tokens WITH MARKET CAP (from backend)
  */
 export async function getAllTokens(page = 1, pageSize = 50) {
   try {
-    // FORCE RELOAD: Changed cache key to force recalculation with market caps
-    const CACHE_VERSION = 'v2_with_mcap'
+    // Use NEW backend endpoint that enriches with market cap
+    const CACHE_VERSION = 'v3_backend_mcap'
     const cachedTokens = window[`_allTokensCache_${CACHE_VERSION}`]
     
     if (!cachedTokens) {
-      console.log('🔄 Fetching ALL tokens from API (first load with market cap calculation)...')
+      console.log('📡 Fetching ALL tokens WITH MARKET CAP from backend...')
       
-      // Fetch all contracts (API returns ~911 total, mix of tokens and NFTs)
-      const allContracts = []
-      let apiPage = 1
-      let hasMore = true
+      // Call new backend endpoint that includes market cap enrichment
+      const response = await fetch(`${API_URL}/api/tokens/screener`)
       
-      while (hasMore && apiPage <= 10) {
-        const data = await apiRequest(`/contract-packages?page=${apiPage}&page_size=100&contract_type_id=2`)
-        allContracts.push(...(data.data || []))
-        
-        hasMore = data.data.length === 100
-        apiPage++
-        
-        console.log(`  Fetched page ${apiPage - 1}: ${data.data.length} contracts (${allContracts.length} total)`)
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.status}`)
       }
       
-      console.log(`📦 Total contracts fetched: ${allContracts.length}`)
+      const data = await response.json()
+      const allTokens = data.tokens || []
       
-      // Filter out NFTs - keep only real CEP-18 tokens
-      const allTokens = allContracts
-        .filter(token => token.latest_version_contract_type_id === 2)
-        .map(token => {
-          const metadata = token.metadata || {}
-          
-          return {
-            contractHash: token.contract_package_hash,
-            name: token.name || metadata.name || 'Unknown Token',
-            symbol: metadata.symbol || token.contract_name?.substring(0, 4).toUpperCase() || 'TKN',
-            logo: token.icon_url || null,
-            description: token.description || '',
-            timestamp: token.timestamp,
-            deployCount: token.deploy_count || 0,
-            // Add ALL available metadata
-            owner: token.owner_public_key || 'Unknown',
-            decimals: metadata.decimals || 9,
-            totalSupply: metadata.total_supply || '0',
-            holders: metadata.holders || null,
-            volume24h: null,
-            marketCapUSD: 0, // Will be enriched from Friendly.Market
-            marketCapCSPR: 0, // Will be enriched from Friendly.Market
-            isCsprFun: token.icon_url?.includes('cspr.fun') || 
-                       token.icon_url?.includes('assets.cspr.fun') ||
-                       metadata.logo?.includes('cspr.fun') ||
-                       metadata.logo?.includes('assets.cspr.fun') ||
-                       false,
-            isScreenerFun: false
-          }
-        })
-      
-      console.log(`✅ Filtered to ${allTokens.length} real CEP-18 tokens (excluded ${allContracts.length - allTokens.length} NFTs)`)
-      
-      // Enrich tokens with Friendly.Market data (market cap, liquidity, etc.)
-      console.log('💰 Enriching tokens with Friendly.Market data...')
-      console.log(`   Found ${allTokens.filter(t => t.isCsprFun).length} CSPR.fun tokens`)
-      console.log(`   Found ${allTokens.filter(t => !t.isCsprFun).length} other tokens`)
-      
-      await enrichTokensWithMarketData(allTokens)
-      
-      // Verify enrichment worked
-      const tokensWithMcap = allTokens.filter(t => t.marketCapUSD > 0).length
-      console.log(`✅ After enrichment: ${tokensWithMcap}/${allTokens.length} tokens have market cap`)
-      
-      if (tokensWithMcap === 0) {
-        console.error('❌ ENRICHMENT FAILED - No tokens have market cap data!')
-      }
+      console.log(`✅ Loaded ${allTokens.length} tokens, ${data.enrichedCount} have market cap from CSPR.fun`)
       
       // Cache the results
       window[`_allTokensCache_${CACHE_VERSION}`] = allTokens
@@ -292,13 +186,26 @@ export async function getAllTokens(page = 1, pageSize = 50) {
     console.log(`📄 Page ${page}/${totalPages}: Showing ${pageTokens.length} tokens (${startIdx + 1}-${Math.min(endIdx, allTokens.length)} of ${allTokens.length})`)
     
     return {
-      tokens: pageTokens,
+      tokens: allTokens, // Return ALL tokens (screener uses them all)
       pageCount: totalPages,
       totalCount: allTokens.length,
       currentPage: page
     }
   } catch (error) {
     console.error('Error fetching tokens:', error)
+    
+    // Fallback to old cache
+    const oldCache = window._allTokensCache || window._allTokensCache_v2_with_mcap
+    if (oldCache) {
+      console.log('📦 Using old cache as fallback')
+      return {
+        tokens: oldCache,
+        pageCount: 1,
+        totalCount: oldCache.length,
+        currentPage: 1
+      }
+    }
+    
     return { tokens: [], pageCount: 0, totalCount: 0, currentPage: 1 }
   }
 }
@@ -494,7 +401,7 @@ export async function getGlobalStats() {
     }
     
     // Use cached tokens count if available, otherwise estimate
-    const CACHE_VERSION = 'v2_with_mcap'
+    const CACHE_VERSION = 'v3_backend_mcap'
     const totalRealTokens = window[`_allTokensCache_${CACHE_VERSION}`]?.length || 237
     
     // Count SCREENER.FUN tokens (tokens with isScreenerFun = true)
