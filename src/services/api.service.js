@@ -152,37 +152,63 @@ async function enrichTokensWithMarketData(tokens) {
   
   const CSPR_PRICE_USD = 0.006 // Approximate CSPR price
   let enriched = 0
+  let failed = 0
+  let noSupply = 0
   
-  tokens.forEach(token => {
+  // Debug: Check first token structure
+  if (tokens.length > 0) {
+    console.log('🔍 Sample token structure:', {
+      symbol: tokens[0].symbol,
+      totalSupply: tokens[0].totalSupply,
+      decimals: tokens[0].decimals,
+      isCsprFun: tokens[0].isCsprFun
+    })
+  }
+  
+  tokens.forEach((token, index) => {
     try {
-      if (token.totalSupply && parseFloat(token.totalSupply) > 0) {
-        const decimals = parseInt(token.decimals) || 9
-        const supply = parseFloat(token.totalSupply) / Math.pow(10, decimals)
-        
-        // Estimate price based on token type
-        let estimatedPriceCSPR
-        if (token.isCsprFun) {
-          // CSPR.fun tokens typically launch at very low price
-          estimatedPriceCSPR = 0.000001
-        } else {
-          // Other tokens - use even smaller default
-          estimatedPriceCSPR = 0.0000001
+      const supply = token.totalSupply
+      const supplyFloat = parseFloat(supply)
+      
+      if (!supply || supply === '0' || isNaN(supplyFloat) || supplyFloat <= 0) {
+        noSupply++
+        if (index < 3) {
+          console.log(`⚠️ Token ${token.symbol} has no valid supply:`, supply)
         }
-        
-        const marketCapCSPR = supply * estimatedPriceCSPR
-        const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
-        
-        token.marketCapUSD = marketCapUSD
-        token.marketCapCSPR = marketCapCSPR
-        token.priceCSPR = estimatedPriceCSPR
-        enriched++
+        return
+      }
+      
+      const decimals = parseInt(token.decimals) || 9
+      const supplyInTokens = supplyFloat / Math.pow(10, decimals)
+      
+      // Estimate price based on token type
+      let estimatedPriceCSPR
+      if (token.isCsprFun) {
+        estimatedPriceCSPR = 0.000001
+      } else {
+        estimatedPriceCSPR = 0.0000001
+      }
+      
+      const marketCapCSPR = supplyInTokens * estimatedPriceCSPR
+      const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
+      
+      token.marketCapUSD = marketCapUSD
+      token.marketCapCSPR = marketCapCSPR
+      token.priceCSPR = estimatedPriceCSPR
+      enriched++
+      
+      if (index < 3) {
+        console.log(`✅ ${token.symbol}: mcap = $${marketCapUSD.toFixed(2)} (supply: ${supplyInTokens.toLocaleString()})`)
       }
     } catch (err) {
-      console.error(`Error calculating mcap for ${token.symbol}:`, err)
+      failed++
+      if (failed < 3) {
+        console.error(`❌ Error for ${token.symbol}:`, err.message)
+      }
     }
   })
   
-  console.log(`✅ Market caps calculated: ${enriched}/${tokens.length} tokens`)
+  console.log(`✅ Market caps calculated: ${enriched} enriched, ${noSupply} no supply, ${failed} errors`)
 }
 
 /**
