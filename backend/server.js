@@ -2865,10 +2865,14 @@ app.get('/api/tokens/screener', async (req, res) => {
         let enrichedCount = 0
         for (const token of allTokens) {
           const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
-          const found = csprFunTokens.find(t => 
-            t.contractHash === cleanHash || 
-            t.contractPackageHash === cleanHash
-          )
+          
+          const found = csprFunTokens.find(t => {
+            // Clean both hashes for comparison
+            const csprFunHash = (t.contractHash || '').replace(/^(contract-package-|hash-)/, '')
+            const csprFunPkgHash = (t.contractPackageHash || '').replace(/^(contract-package-|hash-)/, '')
+            
+            return csprFunHash === cleanHash || csprFunPkgHash === cleanHash
+          })
           
           if (found && !found.isGraduated && found.marketCapCSPR) {
             token.marketCapUSD = parseFloat(found.marketCapCSPR) * csprPriceUSD
@@ -2877,6 +2881,11 @@ app.get('/api/tokens/screener', async (req, res) => {
             token.liquidityCSPR = found.csprReserveUi
             token.volumeCSPR = found.allTimeVolumeCSPR
             enrichedCount++
+            
+            // Debug first 3 matches
+            if (enrichedCount <= 3) {
+              console.log(`  ✅ Enriched ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
+            }
           }
         }
         
