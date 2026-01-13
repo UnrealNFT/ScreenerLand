@@ -2875,11 +2875,14 @@ app.get('/api/tokens/screener', async (req, res) => {
           })
           
           if (found && !found.isGraduated && found.marketCapCSPR) {
-            token.marketCapUSD = parseFloat(found.marketCapCSPR) * csprPriceUSD
-            token.marketCapCSPR = found.marketCapCSPR
+            // Convert European format (comma) to US format (dot)
+            const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
+            
+            token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
+            token.marketCapCSPR = marketCapCSPRValue
             token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
-            token.liquidityCSPR = found.csprReserveUi
-            token.volumeCSPR = found.allTimeVolumeCSPR
+            token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
+            token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
             enrichedCount++
             
             // Debug first 3 matches
