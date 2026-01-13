@@ -455,7 +455,7 @@ export default function ProfilePage() {
                               ) : (
                                 <>
                                   <p className="text-green-400 font-bold text-xl">
-                                    {parseFloat(payment.paid_amount || 0).toFixed(2)} CSPR
+                                    {(parseFloat(payment.paid_amount || 0)).toLocaleString()} CSPR
                                   </p>
                                   {payment.transaction_hash && (
                                     <a
@@ -477,7 +477,7 @@ export default function ProfilePage() {
                       <div className="text-center pt-4 border-t border-white/10">
                         <p className="text-white/60 text-sm">
                           Total CTO Payments: <span className="text-green-400 font-bold">
-                            {ctoPayments.reduce((sum, p) => sum + parseFloat(p.paid_amount || 0), 0).toFixed(2)} CSPR
+                            {ctoPayments.reduce((sum, p) => sum + parseFloat(p.paid_amount || 0), 0).toLocaleString()} CSPR
                           </span>
                           {ctoPayments.some(p => parseFloat(p.paid_amount || 0) === 0) && (
                             <span className="text-purple-400 text-xs ml-2">(+ {ctoPayments.filter(p => parseFloat(p.paid_amount || 0) === 0).length} FREE)</span>
