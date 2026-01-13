@@ -10,6 +10,7 @@ import { API_URL } from '../config'
 export default function Screener() {
   const [allTokens, setAllTokens] = useState([]) // ALL 239 tokens
   const [loading, setLoading] = useState(true)
+  const [enrichingMarketCap, setEnrichingMarketCap] = useState(false)
   const [page, setPage] = useState(() => {
     const saved = sessionStorage.getItem('screener_page')
     return saved ? parseInt(saved) : 1
@@ -79,6 +80,7 @@ export default function Screener() {
       }
       
       // Fetch ALL CEP-18 tokens at once (no pagination needed)
+      setEnrichingMarketCap(true)
       const data = await getAllTokens(1, 1000)
       console.log('📊 Loaded tokens data:', data)
       console.log('📊 Total available:', data.totalCount, '| Returned:', data.tokens?.length || 0)
@@ -86,11 +88,18 @@ export default function Screener() {
       // If we have a cache with all tokens, use it directly
       const allTokensFromCache = window._allTokensCache || data.tokens || []
       console.log('📊 Setting allTokens with', allTokensFromCache.length, 'tokens')
+      
+      // Count tokens with market cap data
+      const tokensWithMcap = allTokensFromCache.filter(t => t.marketCapUSD > 0).length
+      console.log(`💰 ${tokensWithMcap}/${allTokensFromCache.length} tokens have market cap data`)
+      
       setAllTokens(allTokensFromCache)
+      setEnrichingMarketCap(false)
     } catch (error) {
       console.error('Error loading tokens:', error)
       toast.error('Failed to load tokens')
       setAllTokens([])
+      setEnrichingMarketCap(false)
     } finally {
       setLoading(false)
     }
@@ -101,12 +110,17 @@ export default function Screener() {
     
     // Debug market cap data
     if (column === 'marketCap') {
-      console.log('📊 Sample token data for Market Cap sort:', allTokens.slice(0, 3).map(t => ({
-        name: t.name,
-        marketCapCSPR: t.marketCapCSPR,
-        marketCap: t.marketCap,
-        market_cap: t.market_cap
-      })))
+      const tokensWithMcap = allTokens.filter(t => t.marketCapUSD > 0)
+      console.log(`📊 Tokens with Market Cap: ${tokensWithMcap.length}/${allTokens.length}`)
+      console.log('📊 Top 5 by market cap:', tokensWithMcap
+        .sort((a, b) => b.marketCapUSD - a.marketCapUSD)
+        .slice(0, 5)
+        .map(t => ({
+          name: t.name,
+          marketCapUSD: `$${(t.marketCapUSD / 1000).toFixed(1)}K`,
+          priceCSPR: t.priceCSPR
+        }))
+      )
     }
     
     if (sortBy === column) {

@@ -146,18 +146,20 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
 
 /**
  * Enrich tokens with Friendly.Market data (market cap, liquidity, volume)
- * Runs in batches to avoid rate limiting
+ * Only enriches CSPR.fun tokens to avoid rate limiting and speed up loading
  */
 async function enrichTokensWithMarketData(tokens) {
-  console.log(`💰 Enriching ${tokens.length} tokens with Friendly.Market data...`)
+  // Only enrich CSPR.fun tokens (they have liquidity on Friendly.Market)
+  const csprFunTokens = tokens.filter(t => t.isCsprFun)
+  console.log(`💰 Enriching ${csprFunTokens.length} CSPR.fun tokens with Friendly.Market data...`)
   
   let enriched = 0
   let failed = 0
   
-  // Process tokens in batches of 10 with 500ms delay between batches
-  const batchSize = 10
-  for (let i = 0; i < tokens.length; i += batchSize) {
-    const batch = tokens.slice(i, i + batchSize)
+  // Process tokens in batches of 20 (faster than before)
+  const batchSize = 20
+  for (let i = 0; i < csprFunTokens.length; i += batchSize) {
+    const batch = csprFunTokens.slice(i, i + batchSize)
     
     await Promise.all(
       batch.map(async (token) => {
@@ -171,6 +173,7 @@ async function enrichTokensWithMarketData(tokens) {
             token.volume24hUSD = marketData.volume.daily || 0
             token.priceCSPR = marketData.price.cspr || 0
             enriched++
+            console.log(`  ✅ ${token.symbol}: $${(token.marketCapUSD / 1000).toFixed(1)}K mcap`)
           }
         } catch (error) {
           // Token not on Friendly.Market - skip silently
@@ -179,18 +182,13 @@ async function enrichTokensWithMarketData(tokens) {
       })
     )
     
-    // Delay between batches to avoid rate limiting
-    if (i + batchSize < tokens.length) {
-      await new Promise(resolve => setTimeout(resolve, 500))
-    }
-    
-    // Progress log every 50 tokens
-    if ((i + batchSize) % 50 === 0) {
-      console.log(`  Progress: ${Math.min(i + batchSize, tokens.length)}/${tokens.length} (${enriched} enriched, ${failed} not on DEX)`)
+    // Smaller delay between batches (200ms instead of 500ms)
+    if (i + batchSize < csprFunTokens.length) {
+      await new Promise(resolve => setTimeout(resolve, 200))
     }
   }
   
-  console.log(`✅ Market data enrichment complete: ${enriched} tokens enriched, ${failed} not on DEX`)
+  console.log(`✅ Market data enrichment complete: ${enriched}/${csprFunTokens.length} tokens enriched from Friendly.Market`)
 }
 
 /**
