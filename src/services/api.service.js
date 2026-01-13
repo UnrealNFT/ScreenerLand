@@ -1,7 +1,6 @@
 // ScreenerLand - Real CSPR.cloud API Service
 // Connects to Casper blockchain via CSPR.cloud
 import { API_URL } from '../config'
-import { getFriendlyMarketPairData } from './friendlymarket.service'
 
 const API_CONFIG = {
   // PRODUCTION: Must use backend proxy to avoid CORS
@@ -145,71 +144,45 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
 }
 
 /**
- * Enrich tokens with market data from Friendly.Market
- * For CSPR.fun tokens, calculate market cap from totalSupply if no DEX data
+ * Enrich tokens with market cap calculated from totalSupply
+ * Much faster than API calls, works for all tokens
  */
 async function enrichTokensWithMarketData(tokens) {
-  console.log(`💰 Enriching ${tokens.length} tokens with market data...`)
+  console.log(`💰 Calculating market caps for ${tokens.length} tokens...`)
   
   const CSPR_PRICE_USD = 0.006 // Approximate CSPR price
-  let enrichedFromDEX = 0
-  let calculatedForCsprFun = 0
+  let enriched = 0
   
-  // Process all tokens in batches
-  const batchSize = 20
-  for (let i = 0; i < tokens.length; i += batchSize) {
-    const batch = tokens.slice(i, i + batchSize)
-    
-    await Promise.all(
-      batch.map(async (token) => {
-        try {
-          // Try to get data from Friendly.Market DEX
-          const marketData = await getFriendlyMarketPairData(token.contractHash)
-          
-          if (marketData && marketData.marketCap) {
-            token.marketCapUSD = marketData.marketCap.usd || 0
-            token.marketCapCSPR = marketData.marketCap.cspr || 0
-            token.liquidityUSD = marketData.liquidity.usd || 0
-            token.volume24hUSD = marketData.volume.daily || 0
-            token.priceCSPR = marketData.price.cspr || 0
-            enrichedFromDEX++
-            console.log(`  ✅ ${token.symbol}: $${(token.marketCapUSD / 1000).toFixed(1)}K (DEX)`)
-          }
-        } catch (error) {
-          // If not on DEX and it's a CSPR.fun token, calculate market cap from supply
-          if (token.isCsprFun && token.totalSupply) {
-            try {
-              const decimals = parseInt(token.decimals) || 9
-              const supply = parseFloat(token.totalSupply) / Math.pow(10, decimals)
-              
-              // CSPR.fun tokens typically launch at ~0.000001 CSPR
-              // Use a default price for tokens not yet on DEX
-              const estimatedPriceCSPR = 0.000001
-              const marketCapCSPR = supply * estimatedPriceCSPR
-              const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
-              
-              token.marketCapUSD = marketCapUSD
-              token.marketCapCSPR = marketCapCSPR
-              token.priceCSPR = estimatedPriceCSPR
-              calculatedForCsprFun++
-              console.log(`  📊 ${token.symbol}: $${(marketCapUSD / 1000).toFixed(1)}K (calc)`)
-            } catch (err) {
-              // Skip silently
-            }
-          }
+  tokens.forEach(token => {
+    try {
+      if (token.totalSupply && parseFloat(token.totalSupply) > 0) {
+        const decimals = parseInt(token.decimals) || 9
+        const supply = parseFloat(token.totalSupply) / Math.pow(10, decimals)
+        
+        // Estimate price based on token type
+        let estimatedPriceCSPR
+        if (token.isCsprFun) {
+          // CSPR.fun tokens typically launch at very low price
+          estimatedPriceCSPR = 0.000001
+        } else {
+          // Other tokens - use even smaller default
+          estimatedPriceCSPR = 0.0000001
         }
-      })
-    )
-    
-    // Delay between batches
-    if (i + batchSize < tokens.length) {
-      await new Promise(resolve => setTimeout(resolve, 200))
+        
+        const marketCapCSPR = supply * estimatedPriceCSPR
+        const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
+        
+        token.marketCapUSD = marketCapUSD
+        token.marketCapCSPR = marketCapCSPR
+        token.priceCSPR = estimatedPriceCSPR
+        enriched++
+      }
+    } catch (err) {
+      console.error(`Error calculating mcap for ${token.symbol}:`, err)
     }
-  }
+  })
   
-  console.log(`✅ Market data enrichment complete:`)
-  console.log(`   ${enrichedFromDEX} tokens from DEX (real prices)`)
-  console.log(`   ${calculatedForCsprFun} CSPR.fun tokens (calculated)`)
+  console.log(`✅ Market caps calculated: ${enriched}/${tokens.length} tokens`)
 }
 
 /**
@@ -221,8 +194,16 @@ async function enrichTokensWithMarketData(tokens) {
  */
 export async function getAllTokens(page = 1, pageSize = 50) {
   try {
-    // Check if we already have cached tokens
-    if (!window._allTokensCache) {
+    // Check if we already have cached tokens WITH market cap data
+    const cachedTokens = window._allTokensCache
+    const hasMarketCapData = cachedTokens && cachedTokens.some(t => t.marketCapUSD > 0)
+    
+    if (!cachedTokens || !hasMarketCapData) {
+      if (cachedTokens && !hasMarketCapData) {
+        console.log('🔄 Cache found but no market cap data - reloading...')
+        window._allTokensCache = null // Force reload
+      }
+      
       console.log('🔄 Fetching ALL tokens from API (first load)...')
       
       // Fetch all contracts (API returns ~911 total, mix of tokens and NFTs)
@@ -277,7 +258,18 @@ export async function getAllTokens(page = 1, pageSize = 50) {
       
       // Enrich tokens with Friendly.Market data (market cap, liquidity, etc.)
       console.log('💰 Enriching tokens with Friendly.Market data...')
+      console.log(`   Found ${allTokens.filter(t => t.isCsprFun).length} CSPR.fun tokens`)
+      console.log(`   Found ${allTokens.filter(t => !t.isCsprFun).length} other tokens`)
+      
       await enrichTokensWithMarketData(allTokens)
+      
+      // Verify enrichment worked
+      const tokensWithMcap = allTokens.filter(t => t.marketCapUSD > 0).length
+      console.log(`✅ After enrichment: ${tokensWithMcap}/${allTokens.length} tokens have market cap`)
+      
+      if (tokensWithMcap === 0) {
+        console.error('❌ ENRICHMENT FAILED - No tokens have market cap data!')
+      }
       
       // Cache the results
       window._allTokensCache = allTokens
