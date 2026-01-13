@@ -4216,10 +4216,12 @@ app.post('/api/stories/link-cto-payment', async (req, res) => {
       RETURNING *
     `
     
+    const CTO_PRICE = 1000 // 1000 CSPR (same as used in /api/stories/claim-cto)
+    
     const result = await storiesDB.query(insertQuery, [
       cleanTokenHash,
       cleanWallet,
-      10, // 10 CSPR
+      CTO_PRICE, // 1000 CSPR
       cleanDeploy,
       networkName.toLowerCase() // 'mainnet' or 'testnet'
     ])
