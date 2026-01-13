@@ -99,6 +99,16 @@ export default function Screener() {
   const handleSort = (column) => {
     console.log(`🔄 Changing sort to: ${column} (current: ${sortBy})`)
     
+    // Debug market cap data
+    if (column === 'marketCap') {
+      console.log('📊 Sample token data for Market Cap sort:', allTokens.slice(0, 3).map(t => ({
+        name: t.name,
+        marketCapCSPR: t.marketCapCSPR,
+        marketCap: t.marketCap,
+        market_cap: t.market_cap
+      })))
+    }
+    
     if (sortBy === column) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
     } else {
@@ -381,6 +391,7 @@ export default function Screener() {
                   Age {sortBy === 'age' && (sortDir === 'desc' ? '↓' : '↑')}
                 </button>
                 
+                {/* Market Cap - Temporarily disabled until data is available
                 <button
                   onClick={() => handleSort('marketCap')}
                   className={`px-3 md:px-4 py-2 md:py-3 rounded-xl text-sm md:text-base font-semibold transition-all flex items-center gap-2 ${
@@ -392,6 +403,7 @@ export default function Screener() {
                   <FaChartLine className={sortBy === 'marketCap' ? 'animate-pulse' : ''} />
                   <span className="hidden sm:inline">Market </span>Cap {sortBy === 'marketCap' && (sortDir === 'desc' ? '↓' : '↑')}
                 </button>
+                */}
                 
                 <button
                   onClick={() => setSortBy('transactions')}
