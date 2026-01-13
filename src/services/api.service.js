@@ -1,6 +1,7 @@
 // ScreenerLand - Real CSPR.cloud API Service
 // Connects to Casper blockchain via CSPR.cloud
 import { API_URL } from '../config'
+import { getFriendlyMarketPairData } from './friendlymarket.service'
 
 const API_CONFIG = {
   // PRODUCTION: Must use backend proxy to avoid CORS
@@ -144,71 +145,54 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
 }
 
 /**
- * Enrich tokens with market cap calculated from totalSupply
- * Much faster than API calls, works for all tokens
+ * Enrich tokens with REAL market cap from Friendly.Market
+ * Uses contract hash like TokenPage does (not package hash)
  */
 async function enrichTokensWithMarketData(tokens) {
-  console.log(`💰 Calculating market caps for ${tokens.length} tokens...`)
+  console.log(`💰 Loading REAL market caps from Friendly.Market for ${tokens.length} tokens...`)
   
-  const CSPR_PRICE_USD = 0.006 // Approximate CSPR price
   let enriched = 0
-  let failed = 0
-  let noSupply = 0
+  let noData = 0
   
-  // Debug: Check first token structure
-  if (tokens.length > 0) {
-    console.log('🔍 Sample token structure:', {
-      symbol: tokens[0].symbol,
-      totalSupply: tokens[0].totalSupply,
-      decimals: tokens[0].decimals,
-      isCsprFun: tokens[0].isCsprFun
-    })
+  // Process in smaller batches to avoid overwhelming API
+  const batchSize = 5
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    const batch = tokens.slice(i, i + batchSize)
+    
+    await Promise.all(
+      batch.map(async (token) => {
+        try {
+          // Use contract hash (same logic as TokenPage)
+          const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+          
+          const pairData = await getFriendlyMarketPairData(cleanHash)
+          
+          if (pairData && pairData.marketCap && pairData.marketCap.usd > 0) {
+            token.marketCapUSD = pairData.marketCap.usd
+            token.marketCapCSPR = pairData.marketCap.cspr
+            token.liquidityUSD = pairData.liquidity.usd
+            token.volume24hUSD = pairData.volume.daily
+            token.priceCSPR = pairData.price.cspr
+            enriched++
+          } else {
+            noData++
+          }
+        } catch (error) {
+          noData++
+        }
+      })
+    )
+    
+    // Progress log
+    if ((i + batchSize) % 25 === 0) {
+      console.log(`  Progress: ${Math.min(i + batchSize, tokens.length)}/${tokens.length} (${enriched} with data)`)
+    }
+    
+    // Delay between batches
+    await new Promise(resolve => setTimeout(resolve, 300))
   }
   
-  tokens.forEach((token, index) => {
-    try {
-      const supply = token.totalSupply
-      const supplyFloat = parseFloat(supply)
-      
-      if (!supply || supply === '0' || isNaN(supplyFloat) || supplyFloat <= 0) {
-        noSupply++
-        if (index < 3) {
-          console.log(`⚠️ Token ${token.symbol} has no valid supply:`, supply)
-        }
-        return
-      }
-      
-      const decimals = parseInt(token.decimals) || 9
-      const supplyInTokens = supplyFloat / Math.pow(10, decimals)
-      
-      // Estimate price based on token type
-      let estimatedPriceCSPR
-      if (token.isCsprFun) {
-        estimatedPriceCSPR = 0.000001
-      } else {
-        estimatedPriceCSPR = 0.0000001
-      }
-      
-      const marketCapCSPR = supplyInTokens * estimatedPriceCSPR
-      const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
-      
-      token.marketCapUSD = marketCapUSD
-      token.marketCapCSPR = marketCapCSPR
-      token.priceCSPR = estimatedPriceCSPR
-      enriched++
-      
-      if (index < 3) {
-        console.log(`✅ ${token.symbol}: mcap = $${marketCapUSD.toFixed(2)} (supply: ${supplyInTokens.toLocaleString()})`)
-      }
-    } catch (err) {
-      failed++
-      if (failed < 3) {
-        console.error(`❌ Error for ${token.symbol}:`, err.message)
-      }
-    }
-  })
-  
-  console.log(`✅ Market caps calculated: ${enriched} enriched, ${noSupply} no supply, ${failed} errors`)
+  console.log(`✅ Market data loaded: ${enriched} tokens have REAL market cap, ${noData} not on DEX`)
 }
 
 /**
