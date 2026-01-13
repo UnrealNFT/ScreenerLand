@@ -145,25 +145,25 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
 }
 
 /**
- * Enrich tokens with Friendly.Market data (market cap, liquidity, volume)
- * Only enriches CSPR.fun tokens to avoid rate limiting and speed up loading
+ * Enrich tokens with market data from Friendly.Market
+ * For CSPR.fun tokens, calculate market cap from totalSupply if no DEX data
  */
 async function enrichTokensWithMarketData(tokens) {
-  // Only enrich CSPR.fun tokens (they have liquidity on Friendly.Market)
-  const csprFunTokens = tokens.filter(t => t.isCsprFun)
-  console.log(`💰 Enriching ${csprFunTokens.length} CSPR.fun tokens with Friendly.Market data...`)
+  console.log(`💰 Enriching ${tokens.length} tokens with market data...`)
   
-  let enriched = 0
-  let failed = 0
+  const CSPR_PRICE_USD = 0.006 // Approximate CSPR price
+  let enrichedFromDEX = 0
+  let calculatedForCsprFun = 0
   
-  // Process tokens in batches of 20 (faster than before)
+  // Process all tokens in batches
   const batchSize = 20
-  for (let i = 0; i < csprFunTokens.length; i += batchSize) {
-    const batch = csprFunTokens.slice(i, i + batchSize)
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    const batch = tokens.slice(i, i + batchSize)
     
     await Promise.all(
       batch.map(async (token) => {
         try {
+          // Try to get data from Friendly.Market DEX
           const marketData = await getFriendlyMarketPairData(token.contractHash)
           
           if (marketData && marketData.marketCap) {
@@ -172,23 +172,44 @@ async function enrichTokensWithMarketData(tokens) {
             token.liquidityUSD = marketData.liquidity.usd || 0
             token.volume24hUSD = marketData.volume.daily || 0
             token.priceCSPR = marketData.price.cspr || 0
-            enriched++
-            console.log(`  ✅ ${token.symbol}: $${(token.marketCapUSD / 1000).toFixed(1)}K mcap`)
+            enrichedFromDEX++
+            console.log(`  ✅ ${token.symbol}: $${(token.marketCapUSD / 1000).toFixed(1)}K (DEX)`)
           }
         } catch (error) {
-          // Token not on Friendly.Market - skip silently
-          failed++
+          // If not on DEX and it's a CSPR.fun token, calculate market cap from supply
+          if (token.isCsprFun && token.totalSupply) {
+            try {
+              const decimals = parseInt(token.decimals) || 9
+              const supply = parseFloat(token.totalSupply) / Math.pow(10, decimals)
+              
+              // CSPR.fun tokens typically launch at ~0.000001 CSPR
+              // Use a default price for tokens not yet on DEX
+              const estimatedPriceCSPR = 0.000001
+              const marketCapCSPR = supply * estimatedPriceCSPR
+              const marketCapUSD = marketCapCSPR * CSPR_PRICE_USD
+              
+              token.marketCapUSD = marketCapUSD
+              token.marketCapCSPR = marketCapCSPR
+              token.priceCSPR = estimatedPriceCSPR
+              calculatedForCsprFun++
+              console.log(`  📊 ${token.symbol}: $${(marketCapUSD / 1000).toFixed(1)}K (calc)`)
+            } catch (err) {
+              // Skip silently
+            }
+          }
         }
       })
     )
     
-    // Smaller delay between batches (200ms instead of 500ms)
-    if (i + batchSize < csprFunTokens.length) {
+    // Delay between batches
+    if (i + batchSize < tokens.length) {
       await new Promise(resolve => setTimeout(resolve, 200))
     }
   }
   
-  console.log(`✅ Market data enrichment complete: ${enriched}/${csprFunTokens.length} tokens enriched from Friendly.Market`)
+  console.log(`✅ Market data enrichment complete:`)
+  console.log(`   ${enrichedFromDEX} tokens from DEX (real prices)`)
+  console.log(`   ${calculatedForCsprFun} CSPR.fun tokens (calculated)`)
 }
 
 /**
