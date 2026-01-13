@@ -194,17 +194,12 @@ async function enrichTokensWithMarketData(tokens) {
  */
 export async function getAllTokens(page = 1, pageSize = 50) {
   try {
-    // Check if we already have cached tokens WITH market cap data
-    const cachedTokens = window._allTokensCache
-    const hasMarketCapData = cachedTokens && cachedTokens.some(t => t.marketCapUSD > 0)
+    // FORCE RELOAD: Changed cache key to force recalculation with market caps
+    const CACHE_VERSION = 'v2_with_mcap'
+    const cachedTokens = window[`_allTokensCache_${CACHE_VERSION}`]
     
-    if (!cachedTokens || !hasMarketCapData) {
-      if (cachedTokens && !hasMarketCapData) {
-        console.log('🔄 Cache found but no market cap data - reloading...')
-        window._allTokensCache = null // Force reload
-      }
-      
-      console.log('🔄 Fetching ALL tokens from API (first load)...')
+    if (!cachedTokens) {
+      console.log('🔄 Fetching ALL tokens from API (first load with market cap calculation)...')
       
       // Fetch all contracts (API returns ~911 total, mix of tokens and NFTs)
       const allContracts = []
@@ -272,11 +267,11 @@ export async function getAllTokens(page = 1, pageSize = 50) {
       }
       
       // Cache the results
-      window._allTokensCache = allTokens
+      window[`_allTokensCache_${CACHE_VERSION}`] = allTokens
     }
     
     // Get cached tokens
-    const allTokens = window._allTokensCache
+    const allTokens = window[`_allTokensCache_${CACHE_VERSION}`]
     
     // Calculate pagination
     const startIdx = (page - 1) * pageSize
@@ -489,10 +484,11 @@ export async function getGlobalStats() {
     }
     
     // Use cached tokens count if available, otherwise estimate
-    const totalRealTokens = window._allTokensCache?.length || 237
+    const CACHE_VERSION = 'v2_with_mcap'
+    const totalRealTokens = window[`_allTokensCache_${CACHE_VERSION}`]?.length || 237
     
     // Count SCREENER.FUN tokens (tokens with isScreenerFun = true)
-    const screenerTokens = window._allTokensCache?.filter(t => t.isScreenerFun).length || 0
+    const screenerTokens = window[`_allTokensCache_${CACHE_VERSION}`]?.filter(t => t.isScreenerFun).length || 0
     
     return {
       totalTokens: totalRealTokens,      // Real CEP-18 tokens tracked
