@@ -4,11 +4,20 @@ import { API_URL } from '../config'
 const WalletContext = createContext()
 
 export function WalletProvider({ children }) {
-  const [walletAddress, setWalletAddress] = useState(null)
-  const [isConnected, setIsConnected] = useState(false)
+  const [walletAddress, setWalletAddress] = useState(() => {
+    // Restore wallet from localStorage on page load
+    return localStorage.getItem('connectedWallet') || null
+  })
+  const [isConnected, setIsConnected] = useState(() => {
+    // Restore connection state
+    return !!localStorage.getItem('connectedWallet')
+  })
   const [balance, setBalance] = useState(null)
   const [assets, setAssets] = useState({ tokens: [], nfts: [] })
-  const [network, setNetwork] = useState('mainnet') // Store detected network
+  const [network, setNetwork] = useState(() => {
+    // Restore network from localStorage
+    return localStorage.getItem('connectedNetwork') || 'mainnet'
+  })
   
   // Fetch balance and assets when wallet connects OR network changes
   useEffect(() => {
@@ -78,6 +87,9 @@ export function WalletProvider({ children }) {
     setWalletAddress(address)
     setNetwork(detectedNetwork)
     setIsConnected(true)
+    // Persist to localStorage to survive page refresh
+    localStorage.setItem('connectedWallet', address)
+    localStorage.setItem('connectedNetwork', detectedNetwork)
   }
   
   const disconnect = () => {
@@ -87,6 +99,9 @@ export function WalletProvider({ children }) {
     setBalance(null)
     setAssets({ tokens: [], nfts: [] })
     setNetwork('mainnet')
+    // Clear from localStorage
+    localStorage.removeItem('connectedWallet')
+    localStorage.removeItem('connectedNetwork')
   }
   
   return (

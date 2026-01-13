@@ -14,7 +14,7 @@ export default function Screener() {
     const saved = sessionStorage.getItem('screener_page')
     return saved ? parseInt(saved) : 1
   })
-  const [sortBy, setSortBy] = useState('age') // name, age
+  const [sortBy, setSortBy] = useState('age') // name, age, marketCap
   const [sortDir, setSortDir] = useState('desc')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCsprFun, setFilterCsprFun] = useState(false)
@@ -141,6 +141,10 @@ export default function Screener() {
           aVal = new Date(a.timestamp).getTime()
           bVal = new Date(b.timestamp).getTime()
           return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+        case 'marketCap':
+          aVal = parseFloat(a.marketCapCSPR || a.marketCap || 0)
+          bVal = parseFloat(b.marketCapCSPR || b.marketCap || 0)
+          return sortDir === 'desc' ? bVal - aVal : aVal - bVal
         default:
           return 0
       }
@@ -375,6 +379,18 @@ export default function Screener() {
                   }`}
                 >
                   Age {sortBy === 'age' && (sortDir === 'desc' ? '↓' : '↑')}
+                </button>
+                
+                <button
+                  onClick={() => handleSort('marketCap')}
+                  className={`px-3 md:px-4 py-2 md:py-3 rounded-xl text-sm md:text-base font-semibold transition-all flex items-center gap-2 ${
+                    sortBy === 'marketCap' 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg' 
+                      : 'bg-dark-hover text-white/60 hover:bg-dark-hover/80'
+                  }`}
+                >
+                  <FaChartLine className={sortBy === 'marketCap' ? 'animate-pulse' : ''} />
+                  <span className="hidden sm:inline">Market </span>Cap {sortBy === 'marketCap' && (sortDir === 'desc' ? '↓' : '↑')}
                 </button>
                 
                 <button
