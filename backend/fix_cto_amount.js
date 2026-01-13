@@ -3,6 +3,11 @@
 // and changes them to the correct amount: 1000 CSPR
 
 import pg from 'pg'
+import dotenv from 'dotenv'
+
+// Load environment variables
+dotenv.config()
+
 const { Pool } = pg
 
 // Database configuration
@@ -11,7 +16,7 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'screenerfun',
   user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  password: process.env.DATABASE_PASSWORD || process.env.DB_PASSWORD || 'postgres',
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false
 })
 
