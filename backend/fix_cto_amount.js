@@ -2,7 +2,8 @@
 // This script updates all CTO records that have paid_amount = 10
 // and changes them to the correct amount: 1000 CSPR
 
-const { Pool } = require('pg')
+import pg from 'pg'
+const { Pool } = pg
 
 // Database configuration
 const pool = new Pool({
