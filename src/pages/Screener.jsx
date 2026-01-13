@@ -152,8 +152,8 @@ export default function Screener() {
           bVal = new Date(b.timestamp).getTime()
           return sortDir === 'asc' ? aVal - bVal : bVal - aVal
         case 'marketCap':
-          aVal = parseFloat(a.marketCapCSPR || a.marketCap || 0)
-          bVal = parseFloat(b.marketCapCSPR || b.marketCap || 0)
+          aVal = parseFloat(a.marketCapUSD || a.marketCapCSPR || 0)
+          bVal = parseFloat(b.marketCapUSD || b.marketCapCSPR || 0)
           return sortDir === 'desc' ? bVal - aVal : aVal - bVal
         default:
           return 0
@@ -391,7 +391,6 @@ export default function Screener() {
                   Age {sortBy === 'age' && (sortDir === 'desc' ? '↓' : '↑')}
                 </button>
                 
-                {/* Market Cap - Temporarily disabled until data is available
                 <button
                   onClick={() => handleSort('marketCap')}
                   className={`px-3 md:px-4 py-2 md:py-3 rounded-xl text-sm md:text-base font-semibold transition-all flex items-center gap-2 ${
@@ -403,7 +402,6 @@ export default function Screener() {
                   <FaChartLine className={sortBy === 'marketCap' ? 'animate-pulse' : ''} />
                   <span className="hidden sm:inline">Market </span>Cap {sortBy === 'marketCap' && (sortDir === 'desc' ? '↓' : '↑')}
                 </button>
-                */}
                 
                 <button
                   onClick={() => setSortBy('transactions')}

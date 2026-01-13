@@ -1,6 +1,7 @@
 // ScreenerLand - Real CSPR.cloud API Service
 // Connects to Casper blockchain via CSPR.cloud
 import { API_URL } from '../config'
+import { getFriendlyMarketPairData } from './friendlymarket.service'
 
 const API_CONFIG = {
   // PRODUCTION: Must use backend proxy to avoid CORS
@@ -144,6 +145,55 @@ function calculateTokenHoldings(accountHash, actions, contractHash) {
 }
 
 /**
+ * Enrich tokens with Friendly.Market data (market cap, liquidity, volume)
+ * Runs in batches to avoid rate limiting
+ */
+async function enrichTokensWithMarketData(tokens) {
+  console.log(`💰 Enriching ${tokens.length} tokens with Friendly.Market data...`)
+  
+  let enriched = 0
+  let failed = 0
+  
+  // Process tokens in batches of 10 with 500ms delay between batches
+  const batchSize = 10
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    const batch = tokens.slice(i, i + batchSize)
+    
+    await Promise.all(
+      batch.map(async (token) => {
+        try {
+          const marketData = await getFriendlyMarketPairData(token.contractHash)
+          
+          if (marketData && marketData.marketCap) {
+            token.marketCapUSD = marketData.marketCap.usd || 0
+            token.marketCapCSPR = marketData.marketCap.cspr || 0
+            token.liquidityUSD = marketData.liquidity.usd || 0
+            token.volume24hUSD = marketData.volume.daily || 0
+            token.priceCSPR = marketData.price.cspr || 0
+            enriched++
+          }
+        } catch (error) {
+          // Token not on Friendly.Market - skip silently
+          failed++
+        }
+      })
+    )
+    
+    // Delay between batches to avoid rate limiting
+    if (i + batchSize < tokens.length) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+    
+    // Progress log every 50 tokens
+    if ((i + batchSize) % 50 === 0) {
+      console.log(`  Progress: ${Math.min(i + batchSize, tokens.length)}/${tokens.length} (${enriched} enriched, ${failed} not on DEX)`)
+    }
+  }
+  
+  console.log(`✅ Market data enrichment complete: ${enriched} tokens enriched, ${failed} not on DEX`)
+}
+
+/**
  * Get all CEP-18 tokens
  */
 /**
@@ -193,6 +243,8 @@ export async function getAllTokens(page = 1, pageSize = 50) {
             totalSupply: metadata.total_supply || '0',
             holders: metadata.holders || null,
             volume24h: null,
+            marketCapUSD: 0, // Will be enriched from Friendly.Market
+            marketCapCSPR: 0, // Will be enriched from Friendly.Market
             isCsprFun: token.icon_url?.includes('cspr.fun') || 
                        token.icon_url?.includes('assets.cspr.fun') ||
                        metadata.logo?.includes('cspr.fun') ||
@@ -203,6 +255,10 @@ export async function getAllTokens(page = 1, pageSize = 50) {
         })
       
       console.log(`✅ Filtered to ${allTokens.length} real CEP-18 tokens (excluded ${allContracts.length - allTokens.length} NFTs)`)
+      
+      // Enrich tokens with Friendly.Market data (market cap, liquidity, etc.)
+      console.log('💰 Enriching tokens with Friendly.Market data...')
+      await enrichTokensWithMarketData(allTokens)
       
       // Cache the results
       window._allTokensCache = allTokens
