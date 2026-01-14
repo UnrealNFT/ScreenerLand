@@ -2875,7 +2875,8 @@ app.get('/api/tokens/screener', async (req, res) => {
             return csprFunHash === cleanHash || csprFunPkgHash === cleanHash
           })
           
-          if (found && !found.isGraduated && found.marketCapCSPR) {
+          if (found && found.marketCapCSPR) {
+            // Use CSPR.fun market cap for ALL tokens (graduated or not)
             // Convert European format (comma) to US format (dot)
             const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
             
@@ -2884,6 +2885,7 @@ app.get('/api/tokens/screener', async (req, res) => {
             token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
             token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
             token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
+            token.isGraduated = found.isGraduated || false
             enrichedCount++
             
             // Debug first 3 matches
