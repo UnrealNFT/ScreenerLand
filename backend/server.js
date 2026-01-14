@@ -2902,12 +2902,12 @@ app.get('/api/tokens/screener', async (req, res) => {
     console.log('💰 Enriching remaining tokens with Friendly.Market...')
     try {
       const tokensWithoutMcap = allTokens.filter(t => !t.marketCapUSD || t.marketCapUSD === 0)
-      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market...`)
+      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market (limit 30)...`)
       
       let fmEnriched = 0
-      const batchSize = 5
+      const batchSize = 3
       
-      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 50); i += batchSize) {
+      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 30); i += batchSize) {
         const batch = tokensWithoutMcap.slice(i, i + batchSize)
         
         await Promise.all(
@@ -2916,7 +2916,7 @@ app.get('/api/tokens/screener', async (req, res) => {
               const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
               const fmUrl = `https://api.friendly.market/api/v1/amm/pair/info/${cleanHash}`
               
-              const fmResponse = await fetch(fmUrl, { timeout: 3000 })
+              const fmResponse = await fetch(fmUrl)
               if (fmResponse.ok) {
                 const fmData = await fmResponse.json()
                 
@@ -2928,9 +2928,7 @@ app.get('/api/tokens/screener', async (req, res) => {
                   token.volumeCSPR = fmData.volume?.daily || 0
                   fmEnriched++
                   
-                  if (fmEnriched <= 3) {
-                    console.log(`  ✅ FM: ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
-                  }
+                  console.log(`  ✅ FM: ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
                 }
               }
             } catch (err) {
@@ -2940,7 +2938,7 @@ app.get('/api/tokens/screener', async (req, res) => {
         )
         
         // Delay between batches to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 800))
       }
       
       console.log(`✅ Enriched ${fmEnriched} additional tokens with Friendly.Market`)
