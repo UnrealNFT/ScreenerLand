@@ -1,10 +1,10 @@
-# 🚀 Roadmap ScreenerLand 2025-2026
+# 🚀 Roadmap ScreenerLand 2026
 
 > **Vision**: Become the reference platform for the Casper ecosystem - analytics, trading, and token launches
 
 ---
 
-## 🎯 Q1 2025: User Excellence
+## 🎯 Q1 2026: User Excellence ✅
 **Objective**: Optimize platform experience and reliability
 
 - **User Interface**: UX/UI refinement for intuitive navigation
@@ -14,7 +14,7 @@
 
 ---
 
-## 💱 Q2 2025: Decentralized Trading
+## 💱 Q2 2026: Decentralized Trading
 **Objective**: Integrate swap directly on token pages
 
 ### Features
@@ -29,7 +29,7 @@
 
 ---
 
-## 🚀 Q3 2025: Launchpad
+## 🚀 Q3 2026: Launchpad
 **Objective**: Democratize token launches on Casper
 
 - **Pump.fun Model**: Proven and accessible launch mechanism
@@ -39,7 +39,7 @@
 
 ---
 
-## 💬 Q4 2025: Community Enhancement
+## 💬 Q4 2026: Community Enhancement
 **Objective**: Improve community messaging and engagement
 
 - **Enhanced Messaging**: Advanced chat features and improvements
