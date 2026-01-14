@@ -2839,6 +2839,7 @@ app.get('/api/tokens/screener', async (req, res) => {
         const metadata = token.metadata || {}
         return {
           contractHash: token.contract_package_hash,
+          contractHashActual: token.latest_contract_hash || token.contract_package_hash, // REAL contract hash for FM
           name: token.name || metadata.name || 'Unknown Token',
           symbol: metadata.symbol || token.contract_name?.substring(0, 4).toUpperCase() || 'TKN',
           logo: token.icon_url || metadata.logo || null,
@@ -2913,7 +2914,9 @@ app.get('/api/tokens/screener', async (req, res) => {
         await Promise.all(
           batch.map(async (token) => {
             try {
-              const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+              // Use ACTUAL contract hash (not package hash) - same as TokenPage
+              const actualHash = token.contractHashActual || token.contractHash
+              const cleanHash = actualHash.replace(/^(contract-package-|hash-)/, '')
               const fmUrl = `https://api.friendly.market/api/v1/amm/pair/info/${cleanHash}`
               
               const fmResponse = await fetch(fmUrl)
