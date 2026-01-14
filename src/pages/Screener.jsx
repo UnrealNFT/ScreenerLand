@@ -149,6 +149,11 @@ export default function Screener() {
         return false
       }
       
+      // IMPORTANT: When sorting by Market Cap, only show tokens WITH market cap
+      if (sortBy === 'marketCap' && (!token.marketCapUSD || token.marketCapUSD === 0)) {
+        return false
+      }
+      
       return true
     })
     .sort((a, b) => {
