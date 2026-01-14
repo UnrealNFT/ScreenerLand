@@ -15,8 +15,14 @@ export default function Screener() {
     const saved = sessionStorage.getItem('screener_page')
     return saved ? parseInt(saved) : 1
   })
-  const [sortBy, setSortBy] = useState('age') // name, age, marketCap
-  const [sortDir, setSortDir] = useState('desc')
+  const [sortBy, setSortBy] = useState(() => {
+    const saved = sessionStorage.getItem('screener_sortBy')
+    return saved || 'age'
+  })
+  const [sortDir, setSortDir] = useState(() => {
+    const saved = sessionStorage.getItem('screener_sortDir')
+    return saved || 'desc'
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCsprFun, setFilterCsprFun] = useState(false)
   const [filterScreenerFun, setFilterScreenerFun] = useState(false)
@@ -39,6 +45,11 @@ export default function Screener() {
   useEffect(() => {
     sessionStorage.setItem('screener_page', page.toString())
   }, [page])
+  
+  useEffect(() => {
+    sessionStorage.setItem('screener_sortBy', sortBy)
+    sessionStorage.setItem('screener_sortDir', sortDir)
+  }, [sortBy, sortDir])
   
   const loadLatestTransactions = async () => {
     try {
