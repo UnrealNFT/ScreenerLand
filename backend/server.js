@@ -2876,17 +2876,24 @@ app.get('/api/tokens/screener', async (req, res) => {
           })
           
           if (found && found.marketCapCSPR) {
-            // Use CSPR.fun market cap for ALL tokens (graduated or not)
-            // Convert European format (comma) to US format (dot)
-            const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
-            
-            token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
-            token.marketCapCSPR = marketCapCSPRValue
-            token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
-            token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
-            token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
-            token.isGraduated = found.isGraduated || false
-            enrichedCount++
+            // ONLY use CSPR.fun data for NON-GRADUATED tokens
+            // Graduated tokens need Friendly.Market (real DEX price)
+            if (!found.isGraduated) {
+              // Convert European format (comma) to US format (dot)
+              const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
+              
+              token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
+              token.marketCapCSPR = marketCapCSPRValue
+              token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
+              token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
+              token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
+              token.isGraduated = false
+              enrichedCount++
+            } else {
+              // Mark as graduated but don't use bonding curve price
+              token.isGraduated = true
+            }
+          }
             
             // Debug first 3 matches
             if (enrichedCount <= 3) {
@@ -2905,12 +2912,12 @@ app.get('/api/tokens/screener', async (req, res) => {
     console.log('💰 Enriching remaining tokens with Friendly.Market...')
     try {
       const tokensWithoutMcap = allTokens.filter(t => !t.marketCapUSD || t.marketCapUSD === 0)
-      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market (limit 30)...`)
+      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market (limit 100)...`)
       
       let fmEnriched = 0
       const batchSize = 3
       
-      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 30); i += batchSize) {
+      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 100); i += batchSize) {
         const batch = tokensWithoutMcap.slice(i, i + batchSize)
         
         await Promise.all(
