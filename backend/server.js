@@ -2917,6 +2917,144 @@ app.get('/api/tokens/screener', async (req, res) => {
   }
 })
 
+// Screener endpoint WITH Friendly.Market enrichment (slower, called when sorting by Market Cap)
+app.get('/api/tokens/screener-with-fm', async (req, res) => {
+  try {
+    const startTime = Date.now()
+    console.log('🎯 GET /api/tokens/screener-with-fm - with Friendly.Market enrichment')
+    
+    // 1. Get ALL CEP-18 tokens from cspr.cloud
+    const csprCloudUrl = `https://api.cspr.cloud/cep18/tokens`
+    console.log(`📡 Fetching from: ${csprCloudUrl}`)
+    
+    const response = await fetch(csprCloudUrl)
+    const csprCloudData = await response.json()
+    
+    if (!csprCloudData.data) {
+      throw new Error('No data from cspr.cloud')
+    }
+    
+    const allTokens = csprCloudData.data.map(token => ({
+      ...token,
+      marketCapUSD: 0,
+      marketCapCSPR: 0,
+      priceCSPR: 0,
+      liquidityCSPR: 0,
+      volumeCSPR: 0,
+      isGraduated: false,
+      isCsprFun: false
+    }))
+    
+    console.log(`✅ Fetched ${allTokens.length} CEP-18 tokens from cspr.cloud`)
+    
+    // 2. Get CSPR price from CoinGecko
+    const cgResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=casper-network&vs_currencies=usd')
+    const cgData = await cgResponse.json()
+    const csprPriceUSD = cgData['casper-network']?.usd || 0.0059
+    console.log(`💵 CSPR price: $${csprPriceUSD}`)
+    
+    // 3. Enrich with CSPR.fun (bonding curve tokens)
+    let enrichedCount = 0
+    try {
+      const csprFunResponse = await fetch('https://api.cspr.fun/api/v1/tokens/featured')
+      if (csprFunResponse.ok) {
+        const csprFunData = await csprFunResponse.json()
+        console.log(`📊 CSPR.fun returned ${csprFunData.length} tokens`)
+        
+        for (const token of allTokens) {
+          const cleanedLocalHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+          
+          const found = csprFunData.find(cf => {
+            const cleanedCsprFunHash = cf.packageHash.replace(/^(contract-package-|hash-)/, '')
+            return cleanedCsprFunHash === cleanedLocalHash
+          })
+          
+          if (found) {
+            const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
+            
+            token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
+            token.marketCapCSPR = marketCapCSPRValue
+            token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
+            token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
+            token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
+            token.isGraduated = found.isGraduated || false
+            token.isCsprFun = true
+            enrichedCount++
+          }
+        }
+        
+        console.log(`✅ Enriched ${enrichedCount} tokens with CSPR.fun`)
+      }
+    } catch (err) {
+      console.warn('⚠️ CSPR.fun enrichment failed:', err.message)
+    }
+    
+    // 4. Enrich remaining tokens with Friendly.Market
+    console.log('💰 Enriching remaining tokens with Friendly.Market...')
+    try {
+      const tokensWithoutMcap = allTokens.filter(t => !t.marketCapUSD || t.marketCapUSD === 0)
+      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying FM (limit 50)...`)
+      
+      let fmEnriched = 0
+      const batchSize = 5
+      
+      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 50); i += batchSize) {
+        const batch = tokensWithoutMcap.slice(i, i + batchSize)
+        
+        await Promise.all(
+          batch.map(async (token) => {
+            try {
+              const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+              const fmUrl = `https://api.friendly.market/api/v1/amm/pair/info/${cleanHash}`
+              const fmResponse = await fetch(fmUrl)
+              
+              if (fmResponse.ok) {
+                const fmData = await fmResponse.json()
+                
+                if (fmData.marketCap?.usd > 0) {
+                  token.marketCapUSD = fmData.marketCap.usd
+                  token.marketCapCSPR = fmData.marketCap.cspr
+                  token.priceCSPR = fmData.price.cspr
+                  token.liquidityCSPR = fmData.liquidity.cspr
+                  token.volumeCSPR = fmData.volume?.daily || 0
+                  fmEnriched++
+                  
+                  if (fmEnriched <= 5) {
+                    console.log(`  ✅ FM: ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
+                  }
+                }
+              }
+            } catch (err) {
+              // Silent fail
+            }
+          })
+        )
+        
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+      
+      console.log(`✅ Enriched ${fmEnriched} additional tokens with FM`)
+      enrichedCount += fmEnriched
+    } catch (err) {
+      console.warn('⚠️ FM enrichment failed:', err.message)
+    }
+    
+    const elapsed = Date.now() - startTime
+    console.log(`✅ Screener tokens with FM ready in ${elapsed}ms`)
+    
+    res.json({
+      success: true,
+      tokens: allTokens,
+      totalCount: allTokens.length,
+      enrichedCount: allTokens.filter(t => t.marketCapUSD > 0).length
+    })
+    
+  } catch (error) {
+    console.error('❌ Tokens screener-with-fm error:', error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
 // ✅ Report a story
 app.post('/api/stories/:id/report', async (req, res) => {
   try {

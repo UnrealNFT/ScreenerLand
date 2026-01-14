@@ -116,22 +116,28 @@ export default function Screener() {
     }
   }
   
-  const handleSort = (column) => {
+  const handleSort = async (column) => {
     console.log(`🔄 Changing sort to: ${column} (current: ${sortBy})`)
     
-    // Debug market cap data
-    if (column === 'marketCap') {
-      const tokensWithMcap = allTokens.filter(t => t.marketCapUSD > 0)
-      console.log(`📊 Tokens with Market Cap: ${tokensWithMcap.length}/${allTokens.length}`)
-      console.log('📊 Top 5 by market cap:', tokensWithMcap
-        .sort((a, b) => b.marketCapUSD - a.marketCapUSD)
-        .slice(0, 5)
-        .map(t => ({
-          name: t.name,
-          marketCapUSD: `$${(t.marketCapUSD / 1000).toFixed(1)}K`,
-          priceCSPR: t.priceCSPR
-        }))
-      )
+    // If sorting by Market Cap and not already enriched with FM, do it now
+    if (column === 'marketCap' && sortBy !== 'marketCap') {
+      console.log('💰 First time sorting by Market Cap, enriching with Friendly.Market...')
+      setEnrichingMarketCap(true)
+      
+      try {
+        const response = await fetch(`${API_URL}/api/tokens/screener-with-fm`)
+        const data = await response.json()
+        
+        if (data.success && data.tokens) {
+          console.log(`✅ Enriched with FM: ${data.enrichedCount} total tokens with market cap`)
+          setAllTokens(data.tokens)
+        }
+      } catch (err) {
+        console.error('❌ Failed to enrich with FM:', err)
+        toast.error('Failed to load market cap data')
+      } finally {
+        setEnrichingMarketCap(false)
+      }
     }
     
     if (sortBy === column) {
