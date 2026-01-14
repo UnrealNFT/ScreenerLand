@@ -2889,15 +2889,14 @@ app.get('/api/tokens/screener', async (req, res) => {
               token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
               token.isGraduated = false
               enrichedCount++
+              
+              // Debug first 3 matches
+              if (enrichedCount <= 3) {
+                console.log(`  ✅ Enriched ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
+              }
             } else {
               // Mark as graduated but don't use bonding curve price
               token.isGraduated = true
-            }
-          }
-            
-            // Debug first 3 matches
-            if (enrichedCount <= 3) {
-              console.log(`  ✅ Enriched ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
             }
           }
         }
