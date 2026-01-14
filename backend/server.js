@@ -2877,84 +2877,28 @@ app.get('/api/tokens/screener', async (req, res) => {
           
           if (found && found.marketCapCSPR) {
             // ONLY use CSPR.fun data for NON-GRADUATED tokens
-            // Graduated tokens need Friendly.Market (real DEX price)
-            if (!found.isGraduated) {
-              // Convert European format (comma) to US format (dot)
-              const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
-              
-              token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
-              token.marketCapCSPR = marketCapCSPRValue
-              token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
-              token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
-              token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
-              token.isGraduated = false
-              enrichedCount++
-              
-              // Debug first 3 matches
-              if (enrichedCount <= 3) {
-                console.log(`  ✅ Enriched ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
-              }
-            } else {
-              // Mark as graduated but don't use bonding curve price
-              token.isGraduated = true
+            // Convert European format (comma) to US format (dot)
+            const marketCapCSPRValue = parseFloat(found.marketCapCSPR.toString().replace(',', '.'))
+            
+            token.marketCapUSD = marketCapCSPRValue * csprPriceUSD
+            token.marketCapCSPR = marketCapCSPRValue
+            token.priceCSPR = parseFloat(found.csprReserveUi) / parseFloat(found.tokenReserveUi)
+            token.liquidityCSPR = parseFloat(found.csprReserveUi.toString().replace(',', '.'))
+            token.volumeCSPR = parseFloat(found.allTimeVolumeCSPR.toString().replace(',', '.'))
+            token.isGraduated = found.isGraduated || false
+            enrichedCount++
+            
+            // Debug first 5 matches including graduated
+            if (enrichedCount <= 5) {
+              console.log(`  ✅ ${token.symbol}: $${token.marketCapUSD.toFixed(0)}${token.isGraduated ? ' (graduated)' : ''}`)
             }
           }
         }
         
-        console.log(`✅ Enriched ${enrichedCount} tokens with CSPR.fun market caps`)
+        console.log(`✅ Enriched ${enrichedCount} tokens with CSPR.fun (including graduated)`)
       }
     } catch (err) {
       console.warn('⚠️ CSPR.fun enrichment failed:', err.message)
-    }
-    
-    // 4. Enrich remaining tokens (with marketCapUSD = 0) with Friendly.Market API
-    console.log('💰 Enriching remaining tokens with Friendly.Market...')
-    try {
-      const tokensWithoutMcap = allTokens.filter(t => !t.marketCapUSD || t.marketCapUSD === 0)
-      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market (limit 100)...`)
-      
-      let fmEnriched = 0
-      const batchSize = 3
-      
-      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 100); i += batchSize) {
-        const batch = tokensWithoutMcap.slice(i, i + batchSize)
-        
-        await Promise.all(
-          batch.map(async (token) => {
-            try {
-              // Use ACTUAL contract hash (not package hash) - same as TokenPage
-              const actualHash = token.contractHashActual || token.contractHash
-              const cleanHash = actualHash.replace(/^(contract-package-|hash-)/, '')
-              const fmUrl = `https://api.friendly.market/api/v1/amm/pair/info/${cleanHash}`
-              
-              const fmResponse = await fetch(fmUrl)
-              if (fmResponse.ok) {
-                const fmData = await fmResponse.json()
-                
-                if (fmData.marketCap?.usd > 0) {
-                  token.marketCapUSD = fmData.marketCap.usd
-                  token.marketCapCSPR = fmData.marketCap.cspr
-                  token.priceCSPR = fmData.price.cspr
-                  token.liquidityCSPR = fmData.liquidity.cspr
-                  token.volumeCSPR = fmData.volume?.daily || 0
-                  fmEnriched++
-                  
-                  console.log(`  ✅ FM: ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
-                }
-              }
-            } catch (err) {
-              // Ignore errors, just skip
-            }
-          })
-        )
-        
-        // Delay between batches to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 800))
-      }
-      
-      console.log(`✅ Enriched ${fmEnriched} additional tokens with Friendly.Market`)
-    } catch (err) {
-      console.warn('⚠️ Friendly.Market enrichment failed:', err.message)
     }
     
     const elapsed = Date.now() - startTime
