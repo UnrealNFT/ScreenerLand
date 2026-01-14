@@ -2898,6 +2898,56 @@ app.get('/api/tokens/screener', async (req, res) => {
       console.warn('⚠️ CSPR.fun enrichment failed:', err.message)
     }
     
+    // 4. Enrich remaining tokens (with marketCapUSD = 0) with Friendly.Market API
+    console.log('💰 Enriching remaining tokens with Friendly.Market...')
+    try {
+      const tokensWithoutMcap = allTokens.filter(t => !t.marketCapUSD || t.marketCapUSD === 0)
+      console.log(`  Found ${tokensWithoutMcap.length} tokens without market cap, trying Friendly.Market...`)
+      
+      let fmEnriched = 0
+      const batchSize = 5
+      
+      for (let i = 0; i < Math.min(tokensWithoutMcap.length, 50); i += batchSize) {
+        const batch = tokensWithoutMcap.slice(i, i + batchSize)
+        
+        await Promise.all(
+          batch.map(async (token) => {
+            try {
+              const cleanHash = token.contractHash.replace(/^(contract-package-|hash-)/, '')
+              const fmUrl = `https://api.friendly.market/api/v1/amm/pair/info/${cleanHash}`
+              
+              const fmResponse = await fetch(fmUrl, { timeout: 3000 })
+              if (fmResponse.ok) {
+                const fmData = await fmResponse.json()
+                
+                if (fmData.marketCap?.usd > 0) {
+                  token.marketCapUSD = fmData.marketCap.usd
+                  token.marketCapCSPR = fmData.marketCap.cspr
+                  token.priceCSPR = fmData.price.cspr
+                  token.liquidityCSPR = fmData.liquidity.cspr
+                  token.volumeCSPR = fmData.volume?.daily || 0
+                  fmEnriched++
+                  
+                  if (fmEnriched <= 3) {
+                    console.log(`  ✅ FM: ${token.symbol}: $${token.marketCapUSD.toFixed(0)}`)
+                  }
+                }
+              }
+            } catch (err) {
+              // Ignore errors, just skip
+            }
+          })
+        )
+        
+        // Delay between batches to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+      
+      console.log(`✅ Enriched ${fmEnriched} additional tokens with Friendly.Market`)
+    } catch (err) {
+      console.warn('⚠️ Friendly.Market enrichment failed:', err.message)
+    }
+    
     const elapsed = Date.now() - startTime
     console.log(`✅ Screener tokens ready in ${elapsed}ms`)
     
